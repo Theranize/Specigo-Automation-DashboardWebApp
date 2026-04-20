@@ -9,6 +9,7 @@ Built with **Playwright (sync API) + Python + Pytest**.
 
 ## Table of Contents
 
+0. [Prerequisites](#0-prerequisites)
 1. [Architecture Overview](#1-architecture-overview)
 2. [Quick Start](#2-quick-start)
 3. [Directory Structure](#3-directory-structure)
@@ -26,6 +27,35 @@ Built with **Playwright (sync API) + Python + Pytest**.
 15. [E2E Flow — Role Sequence](#15-e2e-flow--role-sequence)
 16. [Role Actions Reference](#16-role-actions-reference)
 17. [DDT Structure & Acceptable Values](#17-ddt-structure--acceptable-values)
+
+---
+
+## 0. Prerequisites
+
+### Requirements
+- **Python 3.14** — [Download](https://www.python.org/downloads/)
+- **Allure CLI** (for HTML reports) — [Install guide](https://allurereport.org/docs/install/)
+
+### Virtual Environment Setup
+
+The project uses a virtual environment located in the `Test/` folder. Run the following commands once from the **project root**:
+
+**Create the virtual environment inside `Test/`:**
+```bash
+python -m venv Test
+```
+
+**Install all dependencies from `requirements.txt`:**
+```bash
+Test\Scripts\pip install -r requirements.txt
+```
+
+**Install Playwright browsers:**
+```bash
+Test\Scripts\playwright install
+```
+
+> **Important:** Always use `Test\Scripts\pytest.exe` (or `run.bat`) to run tests — never the system `pytest`. The `Test/` folder is the venv and must not be renamed or moved.
 
 ---
 
