@@ -1,0 +1,97 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P2",
+      "cycles": [
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
+          ]
+        },
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "24-hour urine", "action": "toggle_on" }
+          ]
+        },
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "cycles": [
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Urine", "action": "toggle_on" }
+          ]
+        },
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
+          ]
+        },
+        {
+          "samples": [
+            { "sub_department": "Hematology", "sample_name": "Whole Blood/Plasma", "action": "toggle_on" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "cycles": [
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
+          ]
+        },
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "24-hour urine", "action": "toggle_on" }
+          ]
+        },
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "cycles": [
+        {
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "24-hour urine", "action": "toggle_on" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "cycles": [
+        {
+          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
+          ]
+        },
+        {
+          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+          "samples": [
+            { "sub_department": "Clinical Chemistry", "sample_name": "24-hour urine", "action": "toggle_on" }
+          ]
+        }
+      ]
+    }
+
+  ]
+}

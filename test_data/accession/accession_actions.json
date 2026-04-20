@@ -1,0 +1,241 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P1",
+      "scenario": "Full acceptance — all 4 samples accepted",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P2",
+      "scenario": "Reject Serum at accession; 3 re_accept cycles (Serum → 24h urine → Serum).",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        {
+          "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample integrity issue — accession rejection"
+          }
+        },
+        { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",         "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_accept": [
+        {
+          "samples": [
+            { "sample": "Serum",        "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "samples": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "samples": [
+            { "sample": "Serum",        "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P3",
+      "scenario": "Partial — accept WB and Serum only; Urine left unprocessed (2 of 3 toggled samples accepted)",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "Full acceptance + doctor rectification — all 4 samples accepted",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P5",
+      "scenario": "Relative (Sunita Kumari Mishra) — full acceptance, all 4 samples accepted",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "scenario": "Reject Urine at accession; 3 re_accept cycles (Urine → Serum → Whole Blood/Plasma).",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        {
+          "sample": "Urine", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Insufficient sample volume"
+          }
+        }
+      ],
+      "re_accept": [
+        {
+          "samples": [
+            { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "samples": [
+            { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "samples": [
+            { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",          "action": "accept", "re_accept": "yes" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P8",
+      "scenario": "New patient (Priya Sharma) — full acceptance, all 4 samples accepted",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "scenario": "New patient (Rohan Desai) — reject Serum; 3 re_accept cycles (Serum → 24h urine → Serum).",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        {
+          "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample integrity issue — accession rejection"
+          }
+        },
+        { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",         "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_accept": [
+        {
+          "samples": [
+            { "sample": "Serum",        "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "samples": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "samples": [
+            { "sample": "Serum",        "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New patient (Kavita Nair) — reject 24h urine at accession; 1 re_accept cycle.",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        {
+          "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Insufficient sample volume"
+          }
+        },
+        { "sample": "Urine", "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_accept": [
+        {
+          "samples": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Relative (Vikram Kumar Mishra) — full acceptance + doctor rectification, all 4 samples accepted",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "scenario": "Reject Serum at accession; 2 re_accept cycles (Serum → 24h urine). Local date 17/04/2026.",
+      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        {
+          "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample integrity issue — accession rejection"
+          }
+        },
+        { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",         "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_accept": [
+        {
+          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+          "samples": [
+            { "sample": "Serum",        "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        },
+        {
+          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+          "samples": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P14",
+      "scenario": "New patient (Sanjay Mehta) — accept WB and Serum (tests: CBC + RFT + LFT)",
+      "samples": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ]
+    }
+
+  ]
+}

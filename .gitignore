@@ -1,0 +1,15 @@
+# Virtual environment / Python runtime
+Test/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Artifacts & reports (generated output)
+artifacts/
+reports/
+
+# Environment files
+.env

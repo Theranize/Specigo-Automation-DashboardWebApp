@@ -1,0 +1,181 @@
+{
+  "patient_test_map": [
+
+    {
+      "patient_id_ref": "P1",
+      "scenario": "Full acceptance — all 7 tests, home collection",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 500, "cash": 2378, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P2",
+      "scenario": "All 7 tests — rejection at accession, LT, and doctor; partial_approve",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P3",
+      "scenario": "All 7 tests — clean flow, doctor partial_approve on Clinical Chemistry",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "All 7 tests — full acceptance, doctor rectifies RFT and LFT",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P5",
+      "scenario": "Select relative Sunita Kumari Mishra — full acceptance all 7 tests",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "scenario": "All 7 tests — rejection at accession (Urine), LT (Serum), doctor (CBC resample); full approve",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P8",
+      "scenario": "New user (Priya Sharma) — full acceptance all 7 tests",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "scenario": "New user (Rohan Desai) — rejection at accession, LT, and doctor; full approve",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New user (Kavita Nair) — accession rejects 24h urine; full LT; doctor approves 6, rectifies LFT",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Add relative Vikram Kumar Mishra (Brother, 7777777777) — full acceptance, doctor rectifies RFT and LFT",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "scenario": "Existing user — rejection at accession (Serum) + LT (24h urine) only; doctor approves all. Local date 17/04/2026.",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",              "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "CBC Hemogram with ESR",                   "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "24 Hrs Urinary Sodium",                   "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" },
+        { "test_name": "Electrolytes, Urine",                     "sample": "Urine",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum",  "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",          "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "24 Hrs Urinary Potassium",                "sample": "24-hour urine",      "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 1878, "online": 0 }
+    },
+
+    {
+      "patient_id_ref": "P14",
+      "scenario": "New user (Sanjay Mehta) — 3 tests only: CBC + RFT + LFT; partial LT fill, doctor partial_approve",
+      "tests": [
+        { "test_name": "Complete Blood Count (CBC)",             "sample": "Whole Blood/Plasma", "sub_department": "Hematology" },
+        { "test_name": "Renal Function test (RFT / KFT), Serum", "sample": "Serum",              "sub_department": "Clinical Chemistry" },
+        { "test_name": "LFT-Liver Function Test, Serum",         "sample": "Serum",              "sub_department": "Clinical Chemistry" }
+      ],
+      "payment": { "home_collection": 0, "cash": 0, "online": 0 }
+    }
+
+  ]
+}

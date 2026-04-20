@@ -1,0 +1,3 @@
+PROFILE_ICON_NAME = "profile"
+LOGOUT_CTA_NAME = "Log Out"
+LOGOUT_CONFIRM_TEXT = "Yes, Logout"

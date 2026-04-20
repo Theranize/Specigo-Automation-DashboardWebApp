@@ -1,0 +1,253 @@
+{
+  "_description": "Claude session reference: patient ID assignments per E2E test. Claude reads this before running or writing any E2E test. Do NOT hardcode pid = 'PX' inside test files — always derive it from this file.",
+
+  "e2e_assignments": {
+
+    "test_e2e_acceptance": {
+      "patient_id": "P1",
+      "scenario": "Full acceptance — all 7 tests, all stages accept/fill/approve (FD → Phlebo → Accession → LT → Doctor)",
+      "patient": "Aditya Kumar Mishra, 7777777777, existing_primary",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_acceptance.py",
+      "ddt": "test_data/e2e/acceptance.json"
+    },
+
+    "test_e2e_p2_rejection": {
+      "patient_id": "P2",
+      "scenario": "3-cycle rejection — accession rejects Serum, LT rejects 24h urine, doctor resamples LFT; final partial_approve",
+      "patient": "Aditya Kumar Mishra, 7777777777, existing_primary",
+      "marker": "rejection",
+      "path": "tests/e2e/rejection/test_e2e_p2_rejection.py",
+      "ddt": "test_data/accession/accession_actions.json + labtech_actions.json + doctor_actions.json (P2)"
+    },
+
+    "test_e2e_p3_partial_approve": {
+      "patient_id": "P3",
+      "scenario": "Partial pipeline — phlebo 3/4 ON (no 24h urine), accession 2/3 (WB+Serum), LT 1/2 (Serum only, saves RFT+LFT), doctor approves RFT+LFT",
+      "patient": "Aditya Kumar Mishra, 7777777777, existing_primary",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p3_partial_approve.py",
+      "ddt": "test_data/doctor/doctor_actions.json (P3)"
+    },
+
+    "test_e2e_p4_rectification": {
+      "patient_id": "P4",
+      "scenario": "Full acceptance + doctor rectification — all 7 tests accepted, doctor rectifies RFT and LFT",
+      "patient": "Aditya Kumar Mishra, 7777777777, existing_primary",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p4_rectification.py",
+      "ddt": "test_data/e2e/p4_rectification.json"
+    },
+
+    "test_e2e_p5_relative_acceptance": {
+      "patient_id": "P5",
+      "scenario": "Select existing relative Sunita Kumari Mishra (Wife, 35F) on account 8839900148 — full acceptance all 7 tests",
+      "patient": "Sunita Kumari Mishra (relative of Aditya Kumar Mishra), 8839900148",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p5_relative_acceptance.py",
+      "ddt": "test_data/e2e/p5_relative_acceptance.json"
+    },
+
+    "test_e2e_p6_rejection": {
+      "patient_id": "P6",
+      "scenario": "3-cycle rejection — accession rejects Urine, LT rejects Serum, doctor resamples CBC; final full approve",
+      "patient": "Aditya Kumar Mishra, 7777777777, existing_primary",
+      "marker": "rejection",
+      "path": "tests/e2e/rejection/test_e2e_p6_rejection.py",
+      "ddt": "test_data/accession/accession_actions.json + labtech_actions.json + doctor_actions.json (P6)"
+    },
+
+    "test_e2e_p7_limit_error": {
+      "patient_id": "P7",
+      "scenario": "Add-relative limit error — search 8839900148, click Add Relative, assert error: 'The patient limit has been reached. A maximum of 10 patients is allowed per number'",
+      "patient": "Aditya Kumar Mishra, 8839900148 (account at capacity)",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p7_limit_error.py",
+      "ddt": "test_data/e2e/p7_limit_error.json"
+    },
+
+    "test_e2e_p11_duplicate_mobile_error": {
+      "patient_id": "P11",
+      "scenario": "Duplicate mobile error — new patient form for Mr Rajesh Kumar with mobile 9999999999 (already registered); verify error on Next and pass",
+      "patient": "Mr Rajesh Kumar (dummy), 9999999999 — new_user attempt",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p10_duplicate_mobile_error.py",
+      "ddt": "test_data/front_desk/patient_data.json (P11)"
+    },
+
+    "test_e2e_p12_relative_acceptance": {
+      "patient_id": "P12",
+      "scenario": "Add relative Vikram Kumar Mishra (Brother, 32M) to account 7777777777 — full acceptance all 7 tests, doctor rectifies RFT and LFT",
+      "patient": "Vikram Kumar Mishra (relative of Aditya Kumar Mishra), 7777777777",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p12_relative_acceptance.py",
+      "ddt": "test_data/e2e/p12_relative_acceptance.json"
+    },
+
+    "test_e2e_p13_partial_rejection": {
+      "patient_id": "P13",
+      "scenario": "Partial rejection — accession rejects Serum, LT rejects 24h urine; doctor approves all. Local date 16/04/2026.",
+      "patient": "Aditya Kumar Mishra, 7777777777, existing_primary",
+      "marker": "rejection",
+      "path": "tests/e2e/rejection/test_e2e_p13_partial_rejection.py",
+      "ddt": "test_data/accession/accession_actions.json + labtech_actions.json + doctor_actions.json (P13)"
+    },
+
+    "test_e2e_p8_new_patient_acceptance": {
+      "patient_id": "P8",
+      "scenario": "New patient full acceptance — Priya Sharma (Mrs, 28F), mobile 8900000010, all 7 tests, all stages accept/fill/approve",
+      "patient": "Priya Sharma, 8900000010, new_user",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p8_new_patient_acceptance.py",
+      "ddt": "test_data/e2e/p8_new_patient_acceptance.json"
+    },
+
+    "test_e2e_p9_new_patient_rejection": {
+      "patient_id": "P9",
+      "scenario": "New patient 3-cycle rejection — Rohan Desai (Mr, 35M), mobile 8900000011; accession rejects Serum, LT rejects 24h urine, doctor resamples LFT; final full approve",
+      "patient": "Rohan Desai, 8900000011, new_user",
+      "marker": "rejection",
+      "path": "tests/e2e/rejection/test_e2e_p9_new_patient_rejection.py",
+      "ddt": "test_data/accession/accession_actions.json + labtech_actions.json + doctor_actions.json (P9)"
+    },
+
+    "test_e2e_p10_new_patient_partial": {
+      "patient_id": "P10",
+      "scenario": "New patient partial rejection — Kavita Nair (Mrs, 42F), mobile 8900000012; accession rejects 24h urine, full LT, doctor approves all + rectifies LFT",
+      "patient": "Kavita Nair, 8900000012, new_user",
+      "marker": "rejection",
+      "path": "tests/e2e/rejection/test_e2e_p10_new_patient_partial.py",
+      "ddt": "test_data/accession/accession_actions.json + labtech_actions.json + doctor_actions.json + doctor_rectify_actions.json (P10)"
+    },
+
+    "test_e2e_p14_partial_approve": {
+      "patient_id": "P14",
+      "scenario": "New patient partial approve — Sanjay Mehta (Mr, 50M), mobile 8900000013; 3 tests only (CBC+RFT+LFT); LT fills partial params; doctor partial_approve all 3",
+      "patient": "Sanjay Mehta, 8900000013, new_user",
+      "marker": "acceptance",
+      "path": "tests/e2e/acceptance/test_e2e_p14_partial_approve.py",
+      "ddt": "test_data/doctor/doctor_actions.json (P14)"
+    }
+
+  },
+
+  "_patient_map": {
+    "P1": {
+      "name": "Aditya Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_primary",
+      "relation": "primary",
+      "scenario_tag": "full_acceptance"
+    },
+    "P2": {
+      "name": "Aditya Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_primary",
+      "relation": "primary",
+      "scenario_tag": "3_cycle_rejection_partial_approve"
+    },
+    "P3": {
+      "name": "Aditya Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_primary",
+      "relation": "primary",
+      "scenario_tag": "clean_flow_partial_approve"
+    },
+    "P4": {
+      "name": "Aditya Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_primary",
+      "relation": "primary",
+      "scenario_tag": "full_acceptance_rectification"
+    },
+    "P5": {
+      "name": "Sunita Kumari Mishra",
+      "mobile": "8839900148",
+      "type": "existing_relative",
+      "relation": "Wife of Aditya Kumar Mishra",
+      "scenario_tag": "relative_select_existing_full_acceptance"
+    },
+    "P6": {
+      "name": "Aditya Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_primary",
+      "relation": "primary",
+      "scenario_tag": "3_cycle_rejection_full_approve"
+    },
+    "P7": {
+      "name": "N/A",
+      "mobile": "8839900148",
+      "type": "limit_error_check",
+      "relation": "N/A",
+      "scenario_tag": "add_relative_limit_error"
+    },
+    "P8": {
+      "name": "Priya Sharma",
+      "mobile": "8900000010",
+      "type": "new_user",
+      "relation": "primary",
+      "scenario_tag": "new_patient_full_acceptance"
+    },
+    "P9": {
+      "name": "Rohan Desai",
+      "mobile": "8900000011",
+      "type": "new_user",
+      "relation": "primary",
+      "scenario_tag": "new_patient_3_cycle_rejection"
+    },
+    "P10": {
+      "name": "Kavita Nair",
+      "mobile": "8900000012",
+      "type": "new_user",
+      "relation": "primary",
+      "scenario_tag": "new_patient_partial_rejection_rectification"
+    },
+    "P11": {
+      "name": "Rajesh Kumar",
+      "mobile": "9999999999",
+      "type": "duplicate_mobile_error",
+      "relation": "N/A",
+      "scenario_tag": "duplicate_mobile_error"
+    },
+    "P12": {
+      "name": "Vikram Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_relative",
+      "relation": "Brother of Aditya Kumar Mishra",
+      "scenario_tag": "relative_add_new_full_acceptance_rectification"
+    },
+    "P13": {
+      "name": "Aditya Kumar Mishra",
+      "mobile": "7777777777",
+      "type": "existing_primary",
+      "relation": "primary",
+      "scenario_tag": "partial_rejection_accession_lt_local_date"
+    },
+    "P14": {
+      "name": "Sanjay Mehta",
+      "mobile": "8900000013",
+      "type": "new_user",
+      "relation": "primary",
+      "scenario_tag": "partial_lt_fill_doctor_partial_approve"
+    }
+  },
+
+  "_patient_summary": [
+    { "no": "P1",  "scenario": "Full acceptance — all 7 tests, all stages (FD→Phlebo→Acc→LT→Doctor)",                           "type": "existing",          "date": "global"          },
+    { "no": "P2",  "scenario": "3-cycle rejection — Acc:Serum → LT:24h urine → Dr:LFT resample → partial_approve",               "type": "existing",          "date": "global"          },
+    { "no": "P3",  "scenario": "Partial pipeline — phlebo 3/4, acc 2/3, LT 1/2 (Serum), Dr approves RFT+LFT",                    "type": "existing",          "date": "global"          },
+    { "no": "P4",  "scenario": "Full acceptance + Dr rectifies RFT+LFT",                                                          "type": "existing",          "date": "global"          },
+    { "no": "P5",  "scenario": "Select existing relative Sunita Kumari Mishra (Wife, 8839900148) — full acceptance, all 7 tests",  "type": "existing_relative", "date": "global"          },
+    { "no": "P6",  "scenario": "3-cycle rejection — Acc:Urine → LT:Serum → Dr:CBC resample → full approve",                      "type": "existing",          "date": "global"          },
+    { "no": "P7",  "scenario": "Add-relative limit error — 10-patient cap reached on 8839900148",                                 "type": "existing",          "date": "N/A"             },
+    { "no": "P8",  "scenario": "New user Priya Sharma (8900000010) — full acceptance, all 7 tests",                               "type": "new",               "date": "global"          },
+    { "no": "P9",  "scenario": "New user Rohan Desai (8900000011) — 3-cycle rejection → LFT resample → full approve",             "type": "new",               "date": "global"          },
+    { "no": "P10", "scenario": "New user Kavita Nair (8900000012) — Acc:24h urine, full LT, Dr approve all + rectify LFT",        "type": "new",               "date": "global"          },
+    { "no": "P11", "scenario": "Duplicate mobile error — new patient form with 9999999999 (already registered)",                  "type": "new",               "date": "N/A"             },
+    { "no": "P12", "scenario": "Add new relative Vikram Kumar Mishra (Brother, 7777777777) — full acceptance + Dr rectify RFT+LFT","type": "new_relative",      "date": "global"          },
+    { "no": "P13", "scenario": "Partial rejection — Acc:Serum, LT:24h urine, Dr approves all (no doctor resample)",               "type": "existing",          "date": "local 16/04/2026"},
+    { "no": "P14", "scenario": "New user Sanjay Mehta (8900000013) — 3 tests (CBC+RFT+LFT), partial LT params, Dr partial_approve","type": "new",              "date": "global"          }
+  ],
+
+  "_usage_note": "When adding a new E2E test: (1) add an entry here with patient_id + scenario, (2) read patient_id from this file when referencing it — never write pid = 'PX' directly in .py files. P1–P4 are different visits for Aditya Kumar Mishra (primary). P5 is a relative on account 8839900148. P6 is Aditya with 3-cycle rejection. P7 tests the 10-patient limit error. P8–P10 are new users. P13 is Aditya with local date 16/04/2026."
+}

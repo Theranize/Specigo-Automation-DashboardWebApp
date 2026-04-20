@@ -1,0 +1,126 @@
+{
+  "sub_departments": [
+    {
+      "sub_dept_name": "Clinical Chemistry",
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sample_name": "24-hour urine",
+          "sample_id": "69831AA00CBA9",
+          "final_action": "approve",
+          "independent_action": null,
+          "parameters": {}
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sample_name": "Urine",
+          "sample_id": "69831AA00EA6D",
+          "final_action": null,
+          "independent_action": {
+            "type": "resample",
+            "reason": "Sample integrity issue"
+          },
+          "parameters": {}
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sample_name": "Serum",
+          "sample_id": "69831AA00D86C",
+          "final_action": "approve",
+          "independent_action": null,
+          "parameters": {
+            "Creatinine": "7.8",
+            "Urea Serum": "320",
+            "Uric Acid": "7.1",
+            "Total Proteins": "6.0",
+            "Albumin": "5.0",
+            "Sodium (Na)": "242",
+            "Potassium (K)": "4.7",
+            "Chloride(Cl)": "104"
+          }
+        },
+        {
+          "test_name": "Arterial Blood Gases (ABG)",
+          "sample_name": "Whole Blood/Plasma",
+          "sample_id": "69831AA0110B8",
+          "final_action": null,
+          "independent_action": {
+            "type": "resample",
+            "reason": "HGH stable at 2–8°C for 8 hours. If more than 8 hrs send in frozen condition."
+          },
+          "parameters": {}
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sample_name": "Serum",
+          "sample_id": "698461F719C4",
+          "final_action": "rectify",
+          "independent_action": null,
+          "parameters": {
+            "Bilirubin - Total": "1.5",
+            "SGPT (ALT)": "22"
+          },
+          "rectification": {
+            "reason": "For Re-Confirmation Of Values",
+            "other_text": ""
+          }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sample_name": "24-hour urine",
+          "sample_id": "698441E81648F",
+          "final_action": "rectify",
+          "independent_action": null,
+          "parameters": {
+            "Urine volume in 24 hours": "1200",
+            "Potassium, urine": "58"
+          },
+          "rectification": {
+            "reason": "Others",
+            "other_text": "Corrected values after recalculation"
+          }
+        }
+      ]
+    },
+    {
+      "sub_dept_name": "Clinical Pathology",
+      "tests": [
+        {
+          "test_name": "Amylase, Urine",
+          "sample_name": "Urine",
+          "sample_id": "69831AA00F4AA",
+          "final_action": null,
+          "independent_action": {
+            "type": "retest"
+          },
+          "parameters": {}
+        }
+      ]
+    },
+    {
+      "sub_dept_name": "Hematology",
+      "tests": [
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sample_name": "Whole Blood/Plasma",
+          "sample_id": "69831AA0109CC",
+          "final_action": "partial_approve",
+          "independent_action": null,
+          "parameters": {
+            "Haemoglobin": "27.2",
+            "RBC": "8.9",
+            "Total WBC count": "9300"
+          }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sample_name": "Whole Blood/Plasma",
+          "sample_id": "69831AA0109CC",
+          "final_action": "partial_approve",
+          "independent_action": null,
+          "parameters": {}
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,537 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P1",
+      "scenario": "Full acceptance — approve all 7 tests across both sub-departments",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium",  "action": "approve" },
+            { "test_name": "Electrolytes, Urine",    "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "7.8", "Urea Serum": "320", "Uric Acid": "7.1",
+                "Total Proteins": "6.0", "Albumin": "5.0", "Sodium (Na)": "242",
+                "Potassium (K)": "4.7", "Chloride(Cl)": "104"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "1.5", "SGPT (ALT)": "22" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "1200", "Potassium, urine": "58" }
+            }
+          ]
+        },
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "27.2", "RBC": "8.9", "Total WBC count": "9300", "Platelet Count": "230", "MPV (Mean Platelet Volume)": "9.2" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P2",
+      "scenario": "Rejection at accession (Serum) + LT (24h urine) + doctor (LFT resample); final partial_approve.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "15.5", "RBC": "5.4", "Total WBC count": "8200", "Platelet Count": "245", "MPV (Mean Platelet Volume)": "9.5" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium",  "action": "approve" },
+            { "test_name": "Electrolytes, Urine",    "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "1.2", "Urea Serum": "30", "Uric Acid": "5.8",
+                "Total Proteins": "7.5", "Albumin": "4.8", "Sodium (Na)": "142",
+                "Potassium (K)": "4.4", "Chloride(Cl)": "103"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "resample",
+              "reason": "Insufficient sample volume for LFT analysis"
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "1100", "Potassium, urine": "44" }
+            }
+          ]
+        }
+      ],
+      "re_approval": {
+        "_note": "P2 — approve LFT after Serum resample cycle; partial_approve dialog.",
+        "sub_departments": [
+          {
+            "sub_dept_name": "Clinical Chemistry",
+            "tests": [
+              {
+                "test_name": "LFT-Liver Function Test, Serum",
+                "action": "partial_approve",
+                "parameters": { "Bilirubin - Total": "0.7", "SGPT (ALT)": "28" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "patient_id_ref": "P3",
+      "scenario": "Partial flow — only Serum reached LT; doctor approves RFT and LFT (Clinical Chemistry only).",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "1.2", "Urea Serum": "28", "Uric Acid": "5.2",
+                "Total Proteins": "7.2", "Albumin": "4.5", "Sodium (Na)": "142",
+                "Potassium (K)": "4.2", "Chloride(Cl)": "103"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.8", "SGPT (ALT)": "32" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "Full acceptance + doctor rectification — approve 5 tests; rectify RFT and LFT (see doctor_rectify_actions).",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "14.0", "RBC": "4.9", "Total WBC count": "7900", "Platelet Count": "218", "MPV (Mean Platelet Volume)": "9.0" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "1.1", "Urea Serum": "26", "Uric Acid": "5.2",
+                "Total Proteins": "7.1", "Albumin": "4.4", "Sodium (Na)": "140",
+                "Potassium (K)": "4.1", "Chloride(Cl)": "102"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "2.0", "SGPT (ALT)": "45" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "1100", "Potassium, urine": "42" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P5",
+      "scenario": "Relative (Sunita Kumari Mishra) — full acceptance, approve all 7 tests",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "12.5", "RBC": "4.2", "Total WBC count": "7500", "Platelet Count": "210", "MPV (Mean Platelet Volume)": "8.8" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "0.9", "Urea Serum": "20", "Uric Acid": "4.8",
+                "Total Proteins": "7.1", "Albumin": "4.5", "Sodium (Na)": "139",
+                "Potassium (K)": "4.0", "Chloride(Cl)": "101"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.6", "SGPT (ALT)": "28" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "980", "Potassium, urine": "40" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "scenario": "Rejection at accession (Urine) + LT (Serum) + doctor (CBC resample); final full approve.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "resample",
+              "reason": "Insufficient sample volume for CBC analysis"
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "0.7", "Urea Serum": "16", "Uric Acid": "3.8",
+                "Total Proteins": "6.6", "Albumin": "4.1", "Sodium (Na)": "137",
+                "Potassium (K)": "3.9", "Chloride(Cl)": "99"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.5", "SGPT (ALT)": "22" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "760", "Potassium, urine": "32" }
+            }
+          ]
+        }
+      ],
+      "re_approval": {
+        "_note": "P6 — approve CBC after WB recollect cycle.",
+        "sub_departments": [
+          {
+            "sub_dept_name": "Hematology",
+            "tests": [
+              {
+                "test_name": "Complete Blood Count (CBC)",
+                "action": "approve",
+                "parameters": { "Haemoglobin": "12.8", "RBC": "4.8", "Total WBC count": "8500" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "patient_id_ref": "P8",
+      "scenario": "New patient (Priya Sharma, 28F) — full acceptance, approve all 7 tests",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "12.0", "RBC": "4.1", "Total WBC count": "7000", "Platelet Count": "215", "MPV (Mean Platelet Volume)": "8.6" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "0.8", "Urea Serum": "19", "Uric Acid": "4.1",
+                "Total Proteins": "7.0", "Albumin": "4.4", "Sodium (Na)": "138",
+                "Potassium (K)": "3.9", "Chloride(Cl)": "100"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.7", "SGPT (ALT)": "27" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "940", "Potassium, urine": "34" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "scenario": "New patient (Rohan Desai) — rejection at accession (Serum) + LT (24h urine) + doctor (LFT resample); final full approve.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "14.8", "RBC": "5.1", "Total WBC count": "8400", "Platelet Count": "250", "MPV (Mean Platelet Volume)": "9.6" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium",  "action": "approve" },
+            { "test_name": "Electrolytes, Urine",    "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "1.0", "Urea Serum": "25", "Uric Acid": "5.6",
+                "Total Proteins": "7.1", "Albumin": "4.5", "Sodium (Na)": "140",
+                "Potassium (K)": "4.2", "Chloride(Cl)": "102"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "resample",
+              "reason": "Insufficient sample volume for LFT analysis"
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "1040", "Potassium, urine": "40" }
+            }
+          ]
+        }
+      ],
+      "re_approval": {
+        "_note": "P9 — approve LFT after Serum resample cycle; full approve.",
+        "sub_departments": [
+          {
+            "sub_dept_name": "Clinical Chemistry",
+            "tests": [
+              {
+                "test_name": "LFT-Liver Function Test, Serum",
+                "action": "approve",
+                "parameters": { "Bilirubin - Total": "0.8", "SGPT (ALT)": "30" }
+              }
+            ]
+          }
+        ]
+      }
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New patient (Kavita Nair) — accession rejects 24h urine; approve all 7 (LFT rectified separately).",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "13.8", "RBC": "4.9", "Total WBC count": "8000", "Platelet Count": "225", "MPV (Mean Platelet Volume)": "9.1" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "1.1", "Urea Serum": "27", "Uric Acid": "5.7",
+                "Total Proteins": "7.3", "Albumin": "4.5", "Sodium (Na)": "140",
+                "Potassium (K)": "4.2", "Chloride(Cl)": "102"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.9", "SGPT (ALT)": "37" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "1120", "Potassium, urine": "42" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Relative (Vikram Kumar Mishra, 32M) — full acceptance, approve all 7 (RFT + LFT rectified separately).",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "15.0", "RBC": "5.3", "Total WBC count": "8800", "Platelet Count": "238", "MPV (Mean Platelet Volume)": "9.3" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "1.2", "Urea Serum": "29", "Uric Acid": "6.1",
+                "Total Proteins": "7.4", "Albumin": "4.7", "Sodium (Na)": "141",
+                "Potassium (K)": "4.3", "Chloride(Cl)": "103"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.9", "SGPT (ALT)": "34" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "1100", "Potassium, urine": "46" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "scenario": "Rejection at accession (Serum) + LT (24h urine); doctor approves all 7. Local date 17/04/2026.",
+      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "action": "approve",
+              "parameters": { "Haemoglobin": "13.5", "RBC": "4.6", "Total WBC count": "7600", "Platelet Count": "220", "MPV (Mean Platelet Volume)": "9.0" }
+            },
+            { "test_name": "CBC Hemogram with ESR", "action": "approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "24 Hrs Urinary Sodium", "action": "approve" },
+            { "test_name": "Electrolytes, Urine",   "action": "approve" },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "approve",
+              "parameters": {
+                "Creatinine": "0.9", "Urea Serum": "22", "Uric Acid": "4.9",
+                "Total Proteins": "6.8", "Albumin": "4.2", "Sodium (Na)": "138",
+                "Potassium (K)": "3.9", "Chloride(Cl)": "100"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "approve",
+              "parameters": { "Bilirubin - Total": "0.6", "SGPT (ALT)": "26" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "action": "approve",
+              "parameters": { "Urine volume in 24 hours": "990", "Potassium, urine": "37" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P14",
+      "scenario": "New patient (Sanjay Mehta) — LT partially filled CBC/RFT/LFT; doctor partially approves all 3.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Hematology",
+          "tests": [
+            { "test_name": "Complete Blood Count (CBC)", "action": "partial_approve" }
+          ]
+        },
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            { "test_name": "Renal Function test (RFT / KFT), Serum", "action": "partial_approve" },
+            { "test_name": "LFT-Liver Function Test, Serum",          "action": "partial_approve" }
+          ]
+        }
+      ]
+    }
+
+  ]
+}

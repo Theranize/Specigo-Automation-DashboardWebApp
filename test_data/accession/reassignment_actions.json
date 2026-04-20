@@ -1,0 +1,47 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P2",
+      "cycles": [
+        { "samples": [{ "sample_name": "Serum",        "sub_department": "Clinical Chemistry", "note": "Re-assigned after accession rejection." }] },
+        { "samples": [{ "sample_name": "24-hour urine", "sub_department": "Clinical Chemistry", "note": "Re-assigned after lab tech rejection." }] },
+        { "samples": [{ "sample_name": "Serum",        "sub_department": "Clinical Chemistry", "note": "Re-assigned after doctor LFT resample." }] }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "cycles": [
+        { "samples": [{ "sample_name": "Urine",             "sub_department": "Clinical Chemistry", "note": "Re-assigned after accession rejection." }] },
+        { "samples": [{ "sample_name": "Serum",             "sub_department": "Clinical Chemistry", "note": "Re-assigned after lab tech rejection." }] },
+        { "samples": [{ "sample_name": "Whole Blood/Plasma", "sub_department": "Hematology",        "note": "Re-assigned after doctor CBC resample." }] }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "cycles": [
+        { "samples": [{ "sample_name": "Serum",        "sub_department": "Clinical Chemistry", "note": "Re-assigned after accession rejection." }] },
+        { "samples": [{ "sample_name": "24-hour urine", "sub_department": "Clinical Chemistry", "note": "Re-assigned after lab tech rejection." }] },
+        { "samples": [{ "sample_name": "Serum",        "sub_department": "Clinical Chemistry", "note": "Re-assigned after doctor LFT resample." }] }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "cycles": [
+        { "samples": [{ "sample_name": "24-hour urine", "sub_department": "Clinical Chemistry", "note": "Re-assigned after accession rejection." }] }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "cycles": [
+        { "samples": [{ "sample_name": "Serum",        "sub_department": "Clinical Chemistry", "note": "Re-assigned after accession rejection." }] },
+        { "samples": [{ "sample_name": "24-hour urine", "sub_department": "Clinical Chemistry", "note": "Re-assigned after lab tech rejection." }] }
+      ]
+    }
+
+  ]
+}

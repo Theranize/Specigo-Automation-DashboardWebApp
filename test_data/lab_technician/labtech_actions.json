@@ -1,0 +1,754 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P1",
+      "scenario": "Full acceptance — all 4 samples accepted, all 7 tests saved.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1200", "Sodium, Urine": "190" }
+        },
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "27.2", "RBC": "7.6", "Total WBC count": "9200" }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "12.5", "RBC": "4.0", "Total WBC count": "6500" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "7.3", "Urea Serum": "320", "Uric Acid": "7.1",
+            "Total Proteins": "6.0", "Albumin": "5.0", "Sodium (Na)": "242",
+            "Potassium (K)": "4.5", "Chloride(Cl)": "104"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "2.0", "SGPT (ALT)": "45" }
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Potassium, Urine": "35", "Sodium, Urine": "85", "Chlorides, Urine": "90" }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1000", "Potassium, urine": "40" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P2",
+      "scenario": "Reject 24h urine at LT (initial visit). re_cycles[0]: 24h urine fixed, save all 7. re_cycles[1]: Serum fixed after doctor LFT resample, save LFT.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" },
+        {
+          "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample haemolysed — LT rejection"
+          }
+        },
+        { "sample": "Urine", "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_cycles": [
+        {
+          "_note": "Phase: 24h urine recollected and re-accepted; save all 7 tests for first time.",
+          "sample_actions": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "15.0", "RBC": "5.2", "Total WBC count": "8000" }
+            },
+            {
+              "test_name": "CBC Hemogram with ESR",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "14.8", "RBC": "5.0", "Total WBC count": "7500" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Sodium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "1200", "Sodium, Urine": "190" }
+            },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": {
+                "Creatinine": "1.1", "Urea Serum": "28", "Uric Acid": "5.5",
+                "Total Proteins": "7.2", "Albumin": "4.5", "Sodium (Na)": "140",
+                "Potassium (K)": "4.2", "Chloride(Cl)": "102"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Bilirubin - Total": "0.8", "SGPT (ALT)": "32" }
+            },
+            {
+              "test_name": "Electrolytes, Urine",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Potassium, Urine": "35", "Sodium, Urine": "85", "Chlorides, Urine": "90" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "1000", "Potassium, urine": "40" }
+            }
+          ]
+        },
+        {
+          "_note": "Phase: Serum recollected after doctor LFT resample; save LFT only.",
+          "sample_actions": [
+            { "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Bilirubin - Total": "0.7", "SGPT (ALT)": "28" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P3",
+      "scenario": "Partial — accept Serum only (1 of 2 accepted at accession); save RFT + LFT.",
+      "sample_actions": [
+        { "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "0.9", "Urea Serum": "22", "Uric Acid": "4.8",
+            "Total Proteins": "6.8", "Albumin": "4.2", "Sodium (Na)": "138",
+            "Potassium (K)": "3.9", "Chloride(Cl)": "100"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "0.6", "SGPT (ALT)": "28" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "Full acceptance + doctor rectification — all 4 samples accepted, all 7 tests.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1150", "Sodium, Urine": "172" }
+        },
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "13.8", "RBC": "4.7", "Total WBC count": "7600" }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "13.5", "RBC": "4.5", "Total WBC count": "7400" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "1.0", "Urea Serum": "25", "Uric Acid": "5.0",
+            "Total Proteins": "7.0", "Albumin": "4.3", "Sodium (Na)": "139",
+            "Potassium (K)": "4.0", "Chloride(Cl)": "101"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "1.8", "SGPT (ALT)": "42" }
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Potassium, Urine": "32", "Sodium, Urine": "80", "Chlorides, Urine": "88" }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1020", "Potassium, urine": "39" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P5",
+      "scenario": "Relative (Sunita Kumari Mishra) — full acceptance, all 7 tests.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1100", "Sodium, Urine": "185" }
+        },
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "12.5", "RBC": "4.2", "Total WBC count": "7500" }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "12.2", "RBC": "4.1", "Total WBC count": "7300" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "0.8", "Urea Serum": "18", "Uric Acid": "4.5",
+            "Total Proteins": "7.0", "Albumin": "4.4", "Sodium (Na)": "138",
+            "Potassium (K)": "3.9", "Chloride(Cl)": "100"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "0.5", "SGPT (ALT)": "25" }
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Potassium, Urine": "30", "Sodium, Urine": "80", "Chlorides, Urine": "88" }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "950", "Potassium, urine": "38" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "scenario": "Reject Serum at LT (initial visit). re_cycles[0]: Serum fixed, save all 7. re_cycles[1]: WB fixed after doctor CBC resample, save CBC.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        {
+          "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample haemolysed — LT rejection"
+          }
+        },
+        { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",         "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+      ],
+      "re_cycles": [
+        {
+          "_note": "Phase: Serum recollected and re-accepted; save all 7 tests for first time.",
+          "sample_actions": [
+            { "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "12.8", "RBC": "4.8", "Total WBC count": "8500" }
+            },
+            {
+              "test_name": "CBC Hemogram with ESR",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "12.6", "RBC": "4.7", "Total WBC count": "8200" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Sodium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "800", "Sodium, Urine": "140" }
+            },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": {
+                "Creatinine": "0.6", "Urea Serum": "15", "Uric Acid": "3.5",
+                "Total Proteins": "6.5", "Albumin": "4.0", "Sodium (Na)": "136",
+                "Potassium (K)": "3.8", "Chloride(Cl)": "98"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Bilirubin - Total": "0.4", "SGPT (ALT)": "20" }
+            },
+            {
+              "test_name": "Electrolytes, Urine",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Potassium, Urine": "25", "Sodium, Urine": "65", "Chlorides, Urine": "75" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "750", "Potassium, urine": "30" }
+            }
+          ]
+        },
+        {
+          "_note": "Phase: WB recollected after doctor CBC resample; save CBC only.",
+          "sample_actions": [
+            { "sample": "Whole Blood/Plasma", "sub_department": "Hematology", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "12.8", "RBC": "4.8", "Total WBC count": "8500" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P8",
+      "scenario": "New patient (Priya Sharma) — full acceptance, all 7 tests.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1050", "Sodium, Urine": "155" }
+        },
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "11.8", "RBC": "4.0", "Total WBC count": "6800" }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "11.5", "RBC": "3.9", "Total WBC count": "6600" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "0.8", "Urea Serum": "18", "Uric Acid": "4.0",
+            "Total Proteins": "6.9", "Albumin": "4.3", "Sodium (Na)": "137",
+            "Potassium (K)": "3.8", "Chloride(Cl)": "99"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "0.7", "SGPT (ALT)": "28" }
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Potassium, Urine": "22", "Sodium, Urine": "60", "Chlorides, Urine": "78" }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "920", "Potassium, urine": "32" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "scenario": "New patient (Rohan Desai) — reject 24h urine at LT. re_cycles[0]: 24h urine fixed, save all 7. re_cycles[1]: Serum fixed after doctor LFT resample, save LFT.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" },
+        {
+          "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample haemolysed — LT rejection"
+          }
+        },
+        { "sample": "Urine", "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_cycles": [
+        {
+          "_note": "Phase: 24h urine recollected and re-accepted; save all 7 tests for first time.",
+          "sample_actions": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "14.5", "RBC": "5.0", "Total WBC count": "8200" }
+            },
+            {
+              "test_name": "CBC Hemogram with ESR",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "14.2", "RBC": "4.9", "Total WBC count": "8000" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Sodium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "1150", "Sodium, Urine": "175" }
+            },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": {
+                "Creatinine": "1.0", "Urea Serum": "24", "Uric Acid": "5.5",
+                "Total Proteins": "7.0", "Albumin": "4.4", "Sodium (Na)": "139",
+                "Potassium (K)": "4.1", "Chloride(Cl)": "101"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Bilirubin - Total": "0.9", "SGPT (ALT)": "35" }
+            },
+            {
+              "test_name": "Electrolytes, Urine",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Potassium, Urine": "28", "Sodium, Urine": "72", "Chlorides, Urine": "86" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "1020", "Potassium, urine": "38" }
+            }
+          ]
+        },
+        {
+          "_note": "Phase: Serum recollected after doctor LFT resample; save LFT only.",
+          "sample_actions": [
+            { "sample": "Serum", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Bilirubin - Total": "0.8", "SGPT (ALT)": "30" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New patient (Kavita Nair) — 24h urine recollected from accession; all 4 samples accepted, all 7 tests.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1200", "Sodium, Urine": "162" }
+        },
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "13.5", "RBC": "4.8", "Total WBC count": "7800" }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "13.2", "RBC": "4.6", "Total WBC count": "7600" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "1.0", "Urea Serum": "25", "Uric Acid": "5.5",
+            "Total Proteins": "7.2", "Albumin": "4.4", "Sodium (Na)": "139",
+            "Potassium (K)": "4.1", "Chloride(Cl)": "101"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "0.8", "SGPT (ALT)": "35" }
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Potassium, Urine": "30", "Sodium, Urine": "76", "Chlorides, Urine": "88" }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1080", "Potassium, urine": "40" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Relative (Vikram Kumar Mishra) — full acceptance + doctor rectification, all 7 tests.",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "accept" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "24 Hrs Urinary Sodium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1150", "Sodium, Urine": "178" }
+        },
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "15.0", "RBC": "5.3", "Total WBC count": "8800" }
+        },
+        {
+          "test_name": "CBC Hemogram with ESR",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "14.8", "RBC": "5.1", "Total WBC count": "8600" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": {
+            "Creatinine": "1.1", "Urea Serum": "27", "Uric Acid": "5.9",
+            "Total Proteins": "7.3", "Albumin": "4.6", "Sodium (Na)": "140",
+            "Potassium (K)": "4.2", "Chloride(Cl)": "102"
+          }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "0.8", "SGPT (ALT)": "32" }
+        },
+        {
+          "test_name": "Electrolytes, Urine",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Potassium, Urine": "34", "Sodium, Urine": "82", "Chlorides, Urine": "90" }
+        },
+        {
+          "test_name": "24 Hrs Urinary Potassium",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Urine volume in 24 hours": "1080", "Potassium, urine": "43" }
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "scenario": "Reject 24h urine at LT (initial visit). re_cycles[0]: 24h urine fixed, save all 7. Local date 17/04/2026.",
+      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" },
+        {
+          "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "reject",
+          "rejection": {
+            "sub_department": "Clinical Chemistry",
+            "select_random_reasons": 1,
+            "reason_text": "Sample haemolysed — LT rejection"
+          }
+        },
+        { "sample": "Urine", "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "re_cycles": [
+        {
+          "_note": "Phase: 24h urine recollected and re-accepted; save all 7 tests for first time. Local date 17/04/2026.",
+          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+          "sample_actions": [
+            { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
+          ],
+          "tests": [
+            {
+              "test_name": "Complete Blood Count (CBC)",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "13.2", "RBC": "4.5", "Total WBC count": "7500" }
+            },
+            {
+              "test_name": "CBC Hemogram with ESR",
+              "sub_department": "Hematology",
+              "action": "save",
+              "parameters": { "Haemoglobin": "13.0", "RBC": "4.4", "Total WBC count": "7300" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Sodium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "1100", "Sodium, Urine": "168" }
+            },
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": {
+                "Creatinine": "0.9", "Urea Serum": "22", "Uric Acid": "4.8",
+                "Total Proteins": "6.8", "Albumin": "4.2", "Sodium (Na)": "138",
+                "Potassium (K)": "3.9", "Chloride(Cl)": "100"
+              }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Bilirubin - Total": "0.6", "SGPT (ALT)": "26" }
+            },
+            {
+              "test_name": "Electrolytes, Urine",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Potassium, Urine": "27", "Sodium, Urine": "70", "Chlorides, Urine": "84" }
+            },
+            {
+              "test_name": "24 Hrs Urinary Potassium",
+              "sub_department": "Clinical Chemistry",
+              "action": "save",
+              "parameters": { "Urine volume in 24 hours": "980", "Potassium, urine": "36" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P14",
+      "scenario": "New patient (Sanjay Mehta) — accept WB + Serum; partial params for CBC, RFT, LFT (doctor will partial_approve).",
+      "sample_actions": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "accept" }
+      ],
+      "tests": [
+        {
+          "test_name": "Complete Blood Count (CBC)",
+          "sub_department": "Hematology",
+          "action": "save",
+          "parameters": { "Haemoglobin": "13.5" }
+        },
+        {
+          "test_name": "Renal Function test (RFT / KFT), Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Creatinine": "1.1", "Urea Serum": "26" }
+        },
+        {
+          "test_name": "LFT-Liver Function Test, Serum",
+          "sub_department": "Clinical Chemistry",
+          "action": "save",
+          "parameters": { "Bilirubin - Total": "0.8" }
+        }
+      ]
+    }
+
+  ]
+}

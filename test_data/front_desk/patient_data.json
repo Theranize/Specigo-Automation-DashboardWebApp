@@ -1,0 +1,317 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P1",
+      "scenario": "Existing user — all 7 tests, full acceptance through all 5 stages",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": "Aditya Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P2",
+      "scenario": "Existing user — all 7 tests, rejection at accession (Serum) + LT (24h urine) + doctor (LFT resample), final partial_approve",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": "Aditya Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Moderate Risk", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P3",
+      "scenario": "Existing user — all 7 tests, clean flow (no rejections), doctor partial_approve on Clinical Chemistry",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": "Aditya Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "High Risk", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "Existing user — all 7 tests, full acceptance, doctor rectifies RFT and LFT",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": "Aditya Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P5",
+      "scenario": "Existing user — search account 8839900148, select existing relative Sunita Kumari Mishra (Wife), full acceptance all 7 tests",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "select_existing_relative",
+        "card_display_name": "Sunita Kumari Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
+        "mobile_number": "8839900148", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {
+        "relation": "Wife",
+        "salutation": "Mrs",
+        "first_name": "Sunita", "middle_name": "Kumari", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 35, "date_of_birth": "",
+        "email": "", "address": { "pincode": "", "address_line": "" }
+      }
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "scenario": "Existing user — all 7 tests, rejection at accession (Urine) + LT (Serum) + doctor (CBC resample), final full approve",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": "Aditya Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Emergency", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P7",
+      "scenario": "Add-relative limit error — search 8839900148, click Add Relative, verify 10-patient limit error",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "add_new_relative",
+        "card_display_name": ""
+      },
+      "expected_error": {
+        "should_appear": true,
+        "message": "The patient limit has been reached. A maximum of 10 patients is allowed per number"
+      },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
+        "mobile_number": "8839900148", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P8",
+      "scenario": "New user — Priya Sharma, mobile 8900000010, full acceptance all 7 tests",
+      "patient_intent": {
+        "patient_type": "new_user",
+        "search_before_add": false,
+        "mobile_number_status": "unregistered",
+        "relative_action": "none",
+        "card_display_name": ""
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Mrs",
+        "first_name": "Priya", "middle_name": "", "last_name": "Sharma",
+        "gender": "", "risk_level": "Normal", "age": 28, "date_of_birth": "",
+        "mobile_number": "8900000015", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "scenario": "New user — Rohan Desai, mobile 8900000011, rejection at accession (Serum) + LT (24h urine) + doctor (LFT resample), final full approve",
+      "patient_intent": {
+        "patient_type": "new_user",
+        "search_before_add": false,
+        "mobile_number_status": "unregistered",
+        "relative_action": "none",
+        "card_display_name": ""
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Mr",
+        "first_name": "Rohan", "middle_name": "", "last_name": "Desai",
+        "gender": "", "risk_level": "Moderate Risk", "age": 35, "date_of_birth": "",
+        "mobile_number": "8900000016", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New user — Kavita Nair, mobile 8900000012, accession rejects 24h urine (partial), full LT + doctor approves 6, rectifies LFT",
+      "patient_intent": {
+        "patient_type": "new_user",
+        "search_before_add": false,
+        "mobile_number_status": "unregistered",
+        "relative_action": "none",
+        "card_display_name": ""
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Mrs",
+        "first_name": "Kavita", "middle_name": "", "last_name": "Nair",
+        "gender": "", "risk_level": "High Risk", "age": 42, "date_of_birth": "",
+        "mobile_number": "8900000017", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P11",
+      "scenario": "Duplicate mobile error — new patient form with mobile 9999999999 (already registered); verify error on Next and stop",
+      "patient_intent": {
+        "patient_type": "new_user",
+        "search_before_add": false,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": ""
+      },
+      "expected_error": {
+        "should_appear": true,
+        "message": "Patient record(s) found with the given mobile number"
+      },
+      "patient": {
+        "salutation": "Mr",
+        "first_name": "Rajesh", "middle_name": "", "last_name": "Kumar",
+        "gender": "", "risk_level": "Normal", "age": 35, "date_of_birth": "",
+        "mobile_number": "9999999999", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Existing user — search 7777777777, add relative Vikram Kumar Mishra (Brother), full acceptance + doctor rectifies RFT and LFT",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "add_new_relative",
+        "card_display_name": "Vikram Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {
+        "relation": "Brother",
+        "salutation": "Mr",
+        "first_name": "Vikram", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "High Risk", "age": 32, "date_of_birth": "",
+        "email": "", "address": { "pincode": "", "address_line": "" }
+      }
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "scenario": "Existing user — all 7 tests, rejection at accession (Serum) + LT (24h urine) only; doctor approves all. Local date 17/04/2026.",
+      "patient_intent": {
+        "patient_type": "existing_primary",
+        "search_before_add": true,
+        "mobile_number_status": "registered",
+        "relative_action": "none",
+        "card_display_name": "Aditya Kumar Mishra"
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Master",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
+        "mobile_number": "7777777777", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    },
+
+    {
+      "patient_id_ref": "P14",
+      "scenario": "New user — Sanjay Mehta, mobile 8900000013; tests CBC + RFT + LFT; LT fills partial params, doctor partial_approve",
+      "patient_intent": {
+        "patient_type": "new_user",
+        "search_before_add": false,
+        "mobile_number_status": "unregistered",
+        "relative_action": "none",
+        "card_display_name": ""
+      },
+      "expected_error": { "should_appear": false, "message": "" },
+      "patient": {
+        "salutation": "Mr",
+        "first_name": "Sanjay", "middle_name": "", "last_name": "Mehta",
+        "gender": "", "risk_level": "Normal", "age": 50, "date_of_birth": "",
+        "mobile_number": "8900000018", "email": "",
+        "address": { "pincode": "", "address_line": "" }
+      },
+      "relative": {}
+    }
+
+  ]
+}

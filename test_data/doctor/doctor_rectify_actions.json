@@ -1,0 +1,79 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "Rectify RFT and LFT after full acceptance.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "rectify",
+              "parameters": {
+                "Creatinine": "1.2", "Urea Serum": "28", "Uric Acid": "5.3",
+                "Total Proteins": "7.1", "Albumin": "4.4", "Sodium (Na)": "141",
+                "Potassium (K)": "4.1", "Chloride(Cl)": "102"
+              },
+              "rectification": { "reason": "For Re-Confirmation Of Values", "other_text": "" }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "rectify",
+              "parameters": { "Bilirubin - Total": "1.5", "SGPT (ALT)": "38" },
+              "rectification": { "reason": "For Re-Confirmation Of Values", "other_text": "" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New patient (Kavita Nair) — rectify LFT only after full acceptance.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "rectify",
+              "parameters": { "Bilirubin - Total": "0.7", "SGPT (ALT)": "28" },
+              "rectification": { "reason": "For Re-Confirmation Of Values", "other_text": "" }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Relative (Vikram Kumar Mishra) — rectify RFT and LFT after full acceptance.",
+      "sub_departments": [
+        {
+          "sub_dept_name": "Clinical Chemistry",
+          "tests": [
+            {
+              "test_name": "Renal Function test (RFT / KFT), Serum",
+              "action": "rectify",
+              "parameters": {
+                "Creatinine": "1.3", "Urea Serum": "31", "Uric Acid": "6.3",
+                "Total Proteins": "7.5", "Albumin": "4.8", "Sodium (Na)": "142",
+                "Potassium (K)": "4.4", "Chloride(Cl)": "104"
+              },
+              "rectification": { "reason": "For Re-Confirmation Of Values", "other_text": "" }
+            },
+            {
+              "test_name": "LFT-Liver Function Test, Serum",
+              "action": "rectify",
+              "parameters": { "Bilirubin - Total": "1.0", "SGPT (ALT)": "36" },
+              "rectification": { "reason": "For Re-Confirmation Of Values", "other_text": "" }
+            }
+          ]
+        }
+      ]
+    }
+
+  ]
+}

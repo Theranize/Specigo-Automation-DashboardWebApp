@@ -1,0 +1,16 @@
+{
+  "dev": {
+    "front_desk":     { "username": "frontdesk_user",  "password": "test@123" },
+    "phlebotomist":   { "username": "phlebo_user",     "password": "test@123" },
+    "accession":      { "username": "accession_user",  "password": "test@123" },
+    "lab_technician": { "username": "labtech_user",    "password": "test@123" },
+    "doctor":         { "username": "doctor_user",     "password": "test@123" }
+  },
+  "staging": {
+    "front_desk":     { "username": "<staging_fd_user>",    "password": "<staging_password>" },
+    "phlebotomist":   { "username": "<staging_phlebo>",     "password": "<staging_password>" },
+    "accession":      { "username": "<staging_acc>",        "password": "<staging_password>" },
+    "lab_technician": { "username": "<staging_lt>",         "password": "<staging_password>" },
+    "doctor":         { "username": "<staging_doc>",        "password": "<staging_password>" }
+  }
+}

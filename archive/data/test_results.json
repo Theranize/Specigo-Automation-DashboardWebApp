@@ -1,0 +1,66 @@
+{
+  "tests": [
+    {
+      "test_name": "24 Hrs Urinary Sodium",
+      "sub_department": "Clinical Chemistry",
+      "sample": "24-hour urine",
+      "sample_id": "69831AA00CBA9",
+      "resample": false,
+      "parameters": {
+        "Urine volume in 24 hours": "1200",
+        "Sodium, Urine": "190"
+      }
+    },
+    {
+      "test_name": "Amylase, Urine",
+      "sub_department": "Clinical Pathology",
+      "sample": "Urine",
+      "sample_id": "69831AA00F4AA",
+      "resample": false,
+      "parameters": {
+        "Amylase, Urine": "230"
+      }
+    },
+    {
+      "test_name": "Electrolytes, Urine",
+      "sub_department": "Clinical Chemistry",
+      "sample": "Urine",
+      "sample_id": "69831AA00EA6D",
+      "resample": false,
+      "parameters": {
+        "Sodium, Urine": "226",
+        "Potassium, Urine": "58",
+        "Chlorides, Urine": "226"
+      }
+    },
+    {
+      "test_name": "Complete Blood Count (CBC)",
+      "sub_department": "Hematology",
+      "sample": "Whole Blood/Plasma",
+      "sample_id": "69831AA0109CC",
+      "resample": false,
+      "parameters": {
+        "Haemoglobin": "27.2",
+        "RBC": "7.6",
+        "Total WBC count": "9200"
+      }
+    },
+    {
+      "test_name": "Renal Function test (RFT / KFT), Serum",
+      "sub_department": "Clinical Chemistry",
+      "sample": "Serum",
+      "sample_id": "69831AA00D86C",
+      "resample": false,
+      "parameters": {
+        "Creatinine": "7.3",
+        "Urea Serum": "320",
+        "Uric Acid": "7.1",
+        "Total Proteins": "6.0",
+        "Albumin": "5.0",
+        "Sodium (Na)": "242",
+        "Potassium (K)": "4.5",
+        "Chloride(Cl)": "104"
+      }
+    }
+  ]
+}

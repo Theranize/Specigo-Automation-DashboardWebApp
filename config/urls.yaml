@@ -1,0 +1,4 @@
+dev:
+  base_url: "https://frontenddevh1.specigo.com/"
+staging:
+  base_url: "https://staging.specigo.com/"

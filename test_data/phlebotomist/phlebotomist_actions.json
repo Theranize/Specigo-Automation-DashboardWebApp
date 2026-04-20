@@ -1,0 +1,135 @@
+{
+  "patients": [
+
+    {
+      "patient_id_ref": "P1",
+      "scenario": "Full acceptance — all 4 samples ON",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P2",
+      "scenario": "All 3 rejections — all 4 samples ON at phlebo; rejections occur downstream",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P3",
+      "scenario": "Partial flow — 3 of 4 samples ON (WB, Serum, Urine); 24h urine OFF",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P4",
+      "scenario": "Full acceptance + rectification — all 4 samples ON",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P5",
+      "scenario": "Relative (Sunita) — all 4 samples ON",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P6",
+      "scenario": "All 3 rejections — all 4 samples ON at phlebo",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P8",
+      "scenario": "New user (Priya Sharma) — all 4 samples ON",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P9",
+      "scenario": "New user (Rohan Desai) — all 4 samples ON; rejections downstream",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P10",
+      "scenario": "New user (Kavita Nair) — all 4 samples ON; accession rejects 24h urine",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P12",
+      "scenario": "Add relative (Vikram) — all 4 samples ON",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P13",
+      "scenario": "Existing user (local date 17/04/2026) — all 4 samples ON; rejections at accession + LT",
+      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "24-hour urine",      "sub_department": "Clinical Chemistry", "action": "toggle_on" },
+        { "sample": "Urine",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    },
+
+    {
+      "patient_id_ref": "P14",
+      "scenario": "New user (Sanjay Mehta) — WB and Serum only; tests CBC + RFT + LFT",
+      "sample_rules": [
+        { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
+        { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" }
+      ]
+    }
+
+  ]
+}

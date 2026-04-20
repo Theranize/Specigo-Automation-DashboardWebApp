@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Specigo Automation — Project Reference</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3354;
+      --accent: #5b8af5;
+      --accent2: #38bdf8;
+      --accent3: #a78bfa;
+      --accent4: #34d399;
+      --accent5: #fb923c;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --danger: #f87171;
+      --success: #4ade80;
+      --warning: #fbbf24;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 260px; height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 20px 0;
+      z-index: 100;
+    }
+    #sidebar .logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+    }
+    #sidebar .logo span { color: var(--muted); font-weight: 400; font-size: 11px; display: block; margin-top: 2px; }
+    #sidebar nav { padding: 12px 0; }
+    #sidebar nav a {
+      display: block;
+      padding: 6px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.15s, background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    #sidebar nav a:hover { color: var(--text); background: var(--surface2); }
+    #sidebar nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(91,138,245,0.06); }
+    #sidebar nav .nav-section {
+      padding: 14px 20px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    #sidebar nav a.sub { padding-left: 34px; font-size: 12px; }
+
+    /* ── Main ── */
+    #main {
+      margin-left: 260px;
+      padding: 40px 48px;
+      max-width: 1100px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px 40px;
+      margin-bottom: 40px;
+    }
+    .hero h1 { font-size: 26px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+    .hero p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .badge-blue { background: rgba(91,138,245,0.15); color: var(--accent); border: 1px solid rgba(91,138,245,0.3); }
+    .badge-cyan { background: rgba(56,189,248,0.12); color: var(--accent2); border: 1px solid rgba(56,189,248,0.25); }
+    .badge-purple { background: rgba(167,139,250,0.12); color: var(--accent3); border: 1px solid rgba(167,139,250,0.25); }
+    .badge-green { background: rgba(52,211,153,0.12); color: var(--accent4); border: 1px solid rgba(52,211,153,0.25); }
+    .badge-orange { background: rgba(251,146,60,0.12); color: var(--accent5); border: 1px solid rgba(251,146,60,0.25); }
+
+    /* ── Sections ── */
+    section { margin-bottom: 52px; scroll-margin-top: 20px; }
+    section > h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    section > h2 .sec-num {
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    /* ── Subsections ── */
+    .subsection { margin-bottom: 32px; }
+    .subsection h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent2);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .subsection h3 .tag {
+      font-size: 10px;
+      background: rgba(56,189,248,0.1);
+      color: var(--accent2);
+      border: 1px solid rgba(56,189,248,0.25);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+
+    /* ── Tables ── */
+    .fn-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
+    .fn-table th {
+      text-align: left;
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+    }
+    .fn-table td {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .fn-table tr:hover td { background: var(--surface2); }
+    .fn-table td:first-child { font-family: 'Cascadia Code', 'Fira Code', monospace; color: var(--accent4); white-space: nowrap; }
+
+    /* ── Code blocks ── */
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      font-size: 12.5px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      overflow-x: auto;
+      margin: 10px 0;
+      color: var(--text);
+    }
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      background: var(--surface2);
+      color: var(--accent4);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ── Cards ── */
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin: 16px 0; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card h4 { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 6px; }
+    .card p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+    /* ── Flow diagram ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+    .flow-step {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .flow-arrow {
+      color: var(--accent);
+      font-size: 18px;
+      padding: 0 8px;
+    }
+    .flow-step.highlight { background: rgba(91,138,245,0.12); border-color: var(--accent); color: var(--accent); }
+
+    /* ── Role table ── */
+    .role-row td:nth-child(1) { font-weight: 600; color: var(--accent3); }
+
+    /* ── Info box ── */
+    .info-box {
+      background: rgba(91,138,245,0.08);
+      border: 1px solid rgba(91,138,245,0.25);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 12px 0;
+    }
+    .info-box strong { color: var(--accent); }
+
+    /* ── Warning box ── */
+    .warn-box {
+      background: rgba(251,191,36,0.07);
+      border: 1px solid rgba(251,191,36,0.25);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--warning);
+      margin: 12px 0;
+    }
+
+    /* ── Return tag ── */
+    .ret { color: var(--accent3); font-size: 11px; }
+
+    /* ── Separator ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      #sidebar { width: 220px; }
+      #main { margin-left: 220px; padding: 24px 24px; }
+    }
+    @media (max-width: 640px) {
+      #sidebar { display: none; }
+      #main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<div id="sidebar">
+  <div class="logo">
+    Specigo Automation
+    <span>Playwright + Python + Pytest</span>
+  </div>
+  <nav>
+    <div class="nav-section">Overview</div>
+    <a href="#overview">Architecture</a>
+    <a href="#quickstart">Quick Start</a>
+    <a href="#e2e-flow">E2E Role Flow</a>
+
+    <div class="nav-section">Layers</div>
+    <a href="#pages">Pages</a>
+    <a href="#pages" class="sub">BasePage</a>
+    <a href="#sec-login-page" class="sub">Login / Logout</a>
+    <a href="#sec-frontdesk-page" class="sub">Front Desk</a>
+    <a href="#sec-accession-page" class="sub">Accession</a>
+    <a href="#sec-phlebotomist-page" class="sub">Phlebotomist</a>
+    <a href="#sec-labtech-page" class="sub">Lab Technician</a>
+    <a href="#sec-doctor-page" class="sub">Doctor</a>
+
+    <a href="#flows">Flows</a>
+    <a href="#tests">Tests</a>
+    <a href="#fixtures">Fixtures</a>
+    <a href="#state">State</a>
+
+    <div class="nav-section">Supporting</div>
+    <a href="#locators">Locators</a>
+    <a href="#testdata">Test Data</a>
+    <a href="#utils">Utils</a>
+    <a href="#config">Config</a>
+    <a href="#artifacts">Artifacts</a>
+    <a href="#patterns">Coding Patterns</a>
+  </nav>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div id="main">
+
+  <!-- ── Hero ── -->
+  <div class="hero">
+    <h1>Specigo Automation Reference</h1>
+    <p>End-to-end test automation for a multi-role clinical lab management system.<br>
+       Framework: <strong>Playwright + Python + Pytest (sync API)</strong> &nbsp;|&nbsp;
+       Base URL: <code>https://frontenddevh1.specigo.com/</code>
+    </p>
+    <div class="badges">
+      <span class="badge badge-blue">Playwright</span>
+      <span class="badge badge-cyan">Python 3.x</span>
+      <span class="badge badge-purple">Pytest</span>
+      <span class="badge badge-green">Page Object Model</span>
+      <span class="badge badge-orange">Data-Driven Testing</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       1. ARCHITECTURE
+  ════════════════════════════════════════ -->
+  <section id="overview">
+    <h2><span class="sec-num">1</span> Architecture Overview</h2>
+
+    <div class="flow">
+      <div class="flow-step highlight">Tests</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Flows</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Pages</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">Locators</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step highlight">Playwright</div>
+    </div>
+
+    <table class="fn-table" style="margin-top:18px;">
+      <thead><tr><th>Layer</th><th>Location</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td>Pages</td><td><code>pages/</code></td><td>UI interaction; all inherit <code>BasePage</code></td></tr>
+        <tr><td>Flows</td><td><code>flows/</code></td><td>Business logic orchestrators; return <code>{completed, error_found, error_message}</code></td></tr>
+        <tr><td>Tests</td><td><code>tests/</code></td><td>Thin assertions; call flows and assert results</td></tr>
+        <tr><td>State</td><td><code>state/runtime_state.py</code></td><td>Shared session dict across flows (patient_id, samples, etc.)</td></tr>
+        <tr><td>Locators</td><td><code>locators/</code></td><td>CSS/XPath selectors organized by role</td></tr>
+        <tr><td>Test Data</td><td><code>test_data/</code></td><td>DDT JSON files per role/scenario</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       2. QUICK START
+  ════════════════════════════════════════ -->
+  <section id="quickstart">
+    <h2><span class="sec-num">2</span> Quick Start</h2>
+    <pre><code class="text"># Run all E2E tests
+.\Test\Scripts\pytest.exe tests/e2e -v --tb=short
+
+# Run by marker
+.\Test\Scripts\pytest.exe -m e2e -v
+.\Test\Scripts\pytest.exe -m smoke -v
+.\Test\Scripts\pytest.exe -m regression -v
+
+# Run specific test file
+.\Test\Scripts\pytest.exe tests/e2e/acceptance/test_e2e_acceptance.py -v
+
+# Generate Allure HTML report
+allure generate reports/allure-results -o reports/allure-report --clean</code></pre>
+    <div class="warn-box">Always use <code>.\Test\Scripts\pytest.exe</code> (venv), NOT the system <code>pytest</code>.</div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       3. E2E ROLE FLOW
+  ════════════════════════════════════════ -->
+  <section id="e2e-flow">
+    <h2><span class="sec-num">3</span> E2E Flow — Role Sequence</h2>
+    <table class="fn-table role-row">
+      <thead><tr><th>Step</th><th>Role</th><th>Key Actions</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Front Desk</td><td>Register patient, assign tests, complete payment, print barcode, capture sample IDs</td></tr>
+        <tr><td>2</td><td>Phlebotomist</td><td>Search patient, toggle samples to "collected"</td></tr>
+        <tr><td>3</td><td>Accession</td><td>Search patient, Accept / Reject / Refresh each sample</td></tr>
+        <tr><td>4</td><td>Lab Technician</td><td>Open Report Entry, navigate sub-depts, fill parameters, save each test</td></tr>
+        <tr><td>5</td><td>Doctor</td><td>Open Report Entry, navigate sub-depts, fill params, perform action</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subsection" style="margin-top:20px;">
+      <h3>Doctor Actions</h3>
+      <table class="fn-table">
+        <thead><tr><th>Action</th><th>Steps</th></tr></thead>
+        <tbody>
+          <tr><td>approve</td><td>Fill params → Save → Approve → "Fully Approve" dialog</td></tr>
+          <tr><td>partial_approve</td><td>Fill params → Save → Approve → "Partially Approve" dialog</td></tr>
+          <tr><td>retest</td><td>Click Re-Test → Confirm Yes</td></tr>
+          <tr><td>resample</td><td>Click Resample → select/enter reason → Submit</td></tr>
+          <tr><td>rectify</td><td>Fill params → Rectify (no Save) → dialog → reason → optional Others text → Submit → Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       4. PAGES
+  ════════════════════════════════════════ -->
+  <section id="pages">
+    <h2><span class="sec-num">4</span> Pages</h2>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px;">
+      All page objects inherit <code>BasePage</code>. Each class encapsulates UI interactions for one role or page area.
+    </p>
+
+    <!-- BasePage -->
+    <div class="subsection" id="sec-base-page">
+      <h3>BasePage <span class="tag">pages/base_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Shared utility methods inherited by all page classes.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>wait_for_navigation(url_pattern, timeout)</td><td>Wait for URL to match pattern</td></tr>
+          <tr><td>wait_for_idle(seconds)</td><td>Explicit wait for UI to settle after actions</td></tr>
+          <tr><td>scroll_down(pixels)</td><td>Scroll page by a given pixel amount</td></tr>
+          <tr><td>scroll_to_element(locator)</td><td>Scroll an element into the viewport</td></tr>
+          <tr><td>click_button(name, scroll)</td><td>Click button by accessible role name</td></tr>
+          <tr><td>click_text(text, exact)</td><td>Click element by visible text content</td></tr>
+          <tr><td>fill_textbox(name, value)</td><td>Fill input by accessible name</td></tr>
+          <tr><td>fill_placeholder(placeholder, value)</td><td>Fill input by placeholder text</td></tr>
+          <tr><td>type_into(locator, value, delay)</td><td>Type into locator with configurable per-key delay</td></tr>
+          <tr><td>select_antd_option(dropdown_selector, option_xpath)</td><td>Open AntD dropdown and select option by XPath</td></tr>
+          <tr><td>get_attribute_value(selector, attribute, nth)</td><td>Read attribute value from element</td></tr>
+          <tr><td>get_input_value(selector)</td><td>Read current value of an input field</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+
+    <!-- Login / Logout -->
+    <div class="subsection" id="sec-login-page">
+      <h3>LoginPage <span class="tag">pages/login/login_page.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>login(username, password)</td><td>Enter credentials and submit; waits until URL leaves <code>/login</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:20px;">LogoutPage <span class="tag">pages/logout/logout_page.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>logout()</td><td>Click profile icon → logout heading → confirmation button</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+
+    <!-- Front Desk -->
+    <div class="subsection" id="sec-frontdesk-page">
+      <h3>FrontDeskPage <span class="tag">pages/front_desk/front_desk_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Patient registration, test assignment, payment, barcode capture, and published reports.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>click_add_patient()</td><td>Click 'Add Patient' and navigate to general info page</td></tr>
+          <tr><td>select_risk_level(risk_level)</td><td>Select risk level from dropdown if not default</td></tr>
+          <tr><td>click_next()</td><td>Scroll and click Next via JS dispatch</td></tr>
+          <tr><td>click_submit()</td><td>Click Submit and wait for network idle</td></tr>
+          <tr><td>search_mobile(mobile)</td><td>Enter mobile number in search field</td></tr>
+          <tr><td>click_search()</td><td>Click Search and wait for results to load</td></tr>
+          <tr><td>select_patient_card(card_display_name)</td><td>Select existing patient from search result cards</td></tr>
+          <tr><td>click_add_relative()</td><td>Click 'Add Relative' after patient search</td></tr>
+          <tr><td>select_relation(relation_name)</td><td>Open relation dropdown (label-based XPath, AntD-aware)</td></tr>
+          <tr><td>detect_error()</td><td>Check for error toasts (limit reached / already registered)</td></tr>
+          <tr><td>select_salutation(value)</td><td>Select salutation from AntD dropdown (handles dot formatting e.g. <code>Mr.</code>)</td></tr>
+          <tr><td>fill_patient_name(first, middle, last)</td><td>Fill all three name fields</td></tr>
+          <tr><td>select_gender(gender)</td><td>Click gender radio button</td></tr>
+          <tr><td>fill_age(age)</td><td>Fill age field</td></tr>
+          <tr><td>fill_pin_code(pin)</td><td>Fill pincode; triggers 3s auto-fill of State/City/District</td></tr>
+          <tr><td>fill_address(address)</td><td>Fill address textarea</td></tr>
+          <tr><td>fill_email(email)</td><td>Fill email field</td></tr>
+          <tr><td>fill_mobile(mobile)</td><td>Fill bottom mobile number field</td></tr>
+          <tr><td>get_mobile_value()</td><td>Read current value of mobile field</td></tr>
+          <tr><td>fill_pin_code_if_empty(pin)</td><td>Only fill pincode if the field is currently empty</td></tr>
+          <tr><td>fill_address_if_empty(address)</td><td>Only fill address if the field is currently empty</td></tr>
+          <tr><td>fill_email_if_empty(email)</td><td>Only fill email if the field is currently empty</td></tr>
+          <tr><td>fill_mobile_if_empty(mobile)</td><td>Only fill mobile if the field is currently empty</td></tr>
+          <tr><td>add_test(test_name)</td><td>Search and select a test in AntD combobox</td></tr>
+          <tr><td>fill_payments(home_collection, cash, online)</td><td>Fill three payment amount fields</td></tr>
+          <tr><td>get_balance()</td><td>Read auto-calculated balance value</td></tr>
+          <tr><td>click_print_bill()</td><td>Click Print Bill and handle new tab opening</td></tr>
+          <tr><td>click_print_barcode()</td><td>Click Print Barcode and wait for modal</td></tr>
+          <tr><td>capture_samples(tests)</td><td>Extract sample IDs and metadata from barcode modal into runtime state</td></tr>
+          <tr><td>close_barcode_modals()</td><td>Two-step modal close sequence</td></tr>
+          <tr><td>navigate_to_published_reports()</td><td>Expand Patients sidebar and click Published Reports</td></tr>
+          <tr><td>find_published_report(patient_name)</td><td>Find patient report row by name in the table</td></tr>
+          <tr><td>view_report(row)</td><td>Click View/Download button on a report row</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+
+    <!-- Accession -->
+    <div class="subsection" id="sec-accession-page">
+      <h3>AccessionPage <span class="tag">pages/accession/accession_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Sample verification and rejection workflow.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>navigate_to_sample_verification()</td><td>Click Accession sidebar → Sample Verification</td></tr>
+          <tr><td>wait_for_table_rows()</td><td>Wait for result table rows to appear</td></tr>
+          <tr><td>apply_date_filters(from_date, to_date)</td><td>Fill from/to date inputs (accepts DD/MM/YYYY or YYYY-MM-DD)</td></tr>
+          <tr><td>fill_search_name(name)</td><td>Enter patient name in search field</td></tr>
+          <tr><td>fill_search_mobile(mobile)</td><td>Enter mobile number in search field</td></tr>
+          <tr><td>click_search()</td><td>Click Search and wait for table to load</td></tr>
+          <tr><td>find_sample_block(sample_name, sample_id)</td><td>Find block matching both name AND sample ID</td></tr>
+          <tr><td>find_sample_block_by_name(sample_name)</td><td>Find block by name only (used for recollected samples)</td></tr>
+          <tr><td>click_refresh(block)</td><td>Click Refresh action within a sample block</td></tr>
+          <tr><td>click_accept(block)</td><td>Click Accept action within a sample block</td></tr>
+          <tr><td>click_reject(block)</td><td>Click Reject action (opens rejection modal)</td></tr>
+          <tr><td>wait_for_rejection_modal()</td><td>Wait for and return the rejection modal locator</td></tr>
+          <tr><td>handle_rejection_modal(modal, rejection_config)</td><td>Complete rejection form and submit</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:20px;">ReassignmentPage <span class="tag">pages/accession/reassignment_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Re-Assignment Log workflow for rejected samples.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>navigate_to_reassignment_log()</td><td>Click Accession sidebar → Re-Assignment Log</td></tr>
+          <tr><td>fill_search_filters(name, mobile)</td><td>Fill name and mobile search inputs</td></tr>
+          <tr><td>click_search()</td><td>Click Search and wait for results</td></tr>
+          <tr><td>wait_for_rows()</td><td>Wait for reassignment table rows</td></tr>
+          <tr><td>find_row(sample_name)</td><td>Find a row by sample name</td></tr>
+          <tr><td>assign_sample(row, note)</td><td>Click Assign, fill note in modal, confirm, wait for modal close</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+
+    <!-- Phlebotomist -->
+    <div class="subsection" id="sec-phlebotomist-page">
+      <h3>PhlebotomistPage <span class="tag">pages/phlebotomist/phlebotomist_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Sample toggle workflow — mark samples collected/not collected.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>navigate_to_sample_tracker()</td><td>Click Phlebotomists sidebar → Sample Tracker</td></tr>
+          <tr><td>verify_page_header()</td><td>Verify Sample Tracker page header is visible</td></tr>
+          <tr><td>apply_date_filters(from_date, to_date)</td><td>Fill from/to date inputs</td></tr>
+          <tr><td>fill_search_name(name)</td><td>Fill patient name search field</td></tr>
+          <tr><td>fill_search_mobile(mobile)</td><td>Fill mobile search field</td></tr>
+          <tr><td>fill_search_id(sample_id)</td><td>Clear and fill sample ID search field</td></tr>
+          <tr><td>click_search()</td><td>Click Search and wait for table to load</td></tr>
+          <tr><td>find_sample_block(sample_name, sample_id)</td><td>Find block matching name AND sample ID</td></tr>
+          <tr><td>toggle_sample(block, action)</td><td>Toggle switch — returns <code>toggled_on</code> / <code>toggled_off</code> / <code>already_on</code> / <code>already_off</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:20px;">RecollectionPage <span class="tag">pages/phlebotomist/recollection_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Re-Collection tab workflow for recollected samples.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>navigate_to_sample_tracker()</td><td>Navigate to Sample Tracker page</td></tr>
+          <tr><td>verify_page_header()</td><td>Verify page header is visible</td></tr>
+          <tr><td>switch_to_recollection_tab()</td><td>Click the Re-Collection tab</td></tr>
+          <tr><td>apply_date_filters(from_date, to_date)</td><td>Fill from/to date inputs</td></tr>
+          <tr><td>fill_search_name(name)</td><td>Enter patient name</td></tr>
+          <tr><td>fill_search_mobile(mobile)</td><td>Enter mobile number</td></tr>
+          <tr><td>click_search()</td><td>Click Search and wait for results</td></tr>
+          <tr><td>wait_for_rows()</td><td>Wait for table rows in the active tab</td></tr>
+          <tr><td>find_sample_block(patient_name, sub_department, sample_name)</td><td>Find block by sub_dept + name; prefers OFF-toggled samples</td></tr>
+          <tr><td>get_block_sample_id(block)</td><td>Extract sample ID from a block element</td></tr>
+          <tr><td>toggle_sample(block, action)</td><td>Toggle switch — returns <code>toggled_on</code> / <code>toggled_off</code> / <code>already_on</code> / <code>already_off</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+
+    <!-- Lab Tech -->
+    <div class="subsection" id="sec-labtech-page">
+      <h3>LabTechPage <span class="tag">pages/lab_technician/labtech_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Report Entry form filling with parameter entry, sub-department traversal, saving, and sample rejection.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>wait_for_report_entry_visible()</td><td>Wait for 'Report Entry' menu item to appear</td></tr>
+          <tr><td>click_report_entry_menu()</td><td>Click Report Entry navigation item</td></tr>
+          <tr><td>apply_date_filters(from_date, to_date)</td><td>Fill AntD RangePicker (DD/MM/YYYY or YYYY-MM-DD)</td></tr>
+          <tr><td>select_department(department)</td><td>Select department from dropdown</td></tr>
+          <tr><td>select_sub_department(sub_department)</td><td>Type first 3 chars and click exact match in results</td></tr>
+          <tr><td>fill_search_name(name)</td><td>Fill patient name search field</td></tr>
+          <tr><td>fill_search_mobile(mobile)</td><td>Fill mobile search field</td></tr>
+          <tr><td>click_apply_filter()</td><td>Click Apply Filter and wait for results</td></tr>
+          <tr><td>wait_for_patient_rows()</td><td>Wait for patient result rows to appear</td></tr>
+          <tr><td>find_sample_sub_row_by_name(sample_name, anchor_id)</td><td>Find sub-row by name (optional anchor ID)</td></tr>
+          <tr><td>find_sample_sub_row(sample_name, sample_id)</td><td>Find sub-row matching name AND sample ID</td></tr>
+          <tr><td>find_sample_sub_row_by_action(sample_name, action_text, anchor_id)</td><td>Find sub-row by name + action button text</td></tr>
+          <tr><td>click_accept_sample(sub_row)</td><td>Click Accept on a sample sub-row</td></tr>
+          <tr><td>click_refresh_sample(sub_row)</td><td>Click Refresh on a sample sub-row</td></tr>
+          <tr><td>click_reject_sample(sub_row)</td><td>Click Reject on a sample sub-row (opens modal)</td></tr>
+          <tr><td>handle_rejection_modal(rejection_config)</td><td>Complete rejection modal form and submit</td></tr>
+          <tr><td>open_report_entry(sample_id)</td><td>Hover row until Report Entry icon appears; find correct row by sample ID</td></tr>
+          <tr><td>reset_to_first_sub_department()</td><td>Click Previous Sub-Department until disabled</td></tr>
+          <tr><td>click_next_sub_department()</td><td>Click Next Sub-Department; returns <code>False</code> if already at last</td></tr>
+          <tr><td>_scroll_until_test_visible(test_name, max_scrolls)</td><td>Scroll to make a test heading visible on the page</td></tr>
+          <tr><td>find_test_row_on_current_page(test_name)</td><td>Find test row on the currently visible sub-dept page</td></tr>
+          <tr><td>traverse_and_find_test(test_name)</td><td>Reset to first sub-dept and traverse until the test is found</td></tr>
+          <tr><td>fill_parameter(row, param_name, value)</td><td>Fill a single parameter input with retry logic</td></tr>
+          <tr><td>_wait_until_enabled(button, timeout)</td><td>Poll a button locator until it becomes enabled</td></tr>
+          <tr><td>save_test(row)</td><td>Click Save and handle the confirmation dialog</td></tr>
+          <tr><td>resample_test(row, reason)</td><td>Click Resample, fill reason, and submit</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr>
+
+    <!-- Doctor -->
+    <div class="subsection" id="sec-doctor-page">
+      <h3>DoctorPage <span class="tag">pages/doctor/doctor_page.py</span></h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Doctor Report Review: parameter entry, approval, retest, resample, and rectification workflows.</p>
+      <table class="fn-table">
+        <thead><tr><th>Method</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>wait_for_report_entry_visible()</td><td>Wait for Report Entry menu item</td></tr>
+          <tr><td>click_report_entry_menu()</td><td>Click Report Entry navigation item</td></tr>
+          <tr><td>apply_date_filters(from_date, to_date)</td><td>Fill AntD RangePicker date range</td></tr>
+          <tr><td>fill_search_name(name)</td><td>Fill patient name search field</td></tr>
+          <tr><td>fill_search_mobile(mobile)</td><td>Fill mobile search field</td></tr>
+          <tr><td>click_apply_filter()</td><td>Click Apply Filter and wait for results</td></tr>
+          <tr><td>wait_for_patient_rows()</td><td>Wait for patient rows to appear in the table</td></tr>
+          <tr><td>open_report_entry(sample_id)</td><td>Hover row and click Report Entry icon; match by sample ID for parallel safety</td></tr>
+          <tr><td>is_sub_dept_visible(sub_dept_name)</td><td>Check if a sub-department heading is visible on current page</td></tr>
+          <tr><td>navigate_to_sub_dept(sub_dept_name)</td><td>Click Next/Previous until the target sub-dept is visible (max 20 attempts)</td></tr>
+          <tr><td>find_test_row(test_name, max_scrolls)</td><td>Locate a test row in the current sub-department view</td></tr>
+          <tr><td>fill_parameter(row, param_name, value)</td><td>Fill a single parameter input with retry logic</td></tr>
+          <tr><td>fill_parameters(row, parameters)</td><td>Fill all parameters for a test; returns error string or <code>None</code></td></tr>
+          <tr><td>_wait_until_enabled(button, timeout)</td><td>Poll a button locator until it becomes enabled</td></tr>
+          <tr><td>save_test(row)</td><td>Click Save and handle confirmation; handles multi-row test layouts</td></tr>
+          <tr><td>handle_approve(row, action)</td><td>Click Approve → "Fully Approve" or "Partially Approve" dialog based on action</td></tr>
+          <tr><td>handle_retest(row)</td><td>Click Re-Test and confirm Yes</td></tr>
+          <tr><td>handle_resample(row, reason)</td><td>Click Resample, select reason (checkbox or free-text), submit</td></tr>
+          <tr><td>handle_rectify(row, rectification)</td><td>Click Rectify, select reason, fill "Others" text if needed, Submit → confirm Yes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       5. FLOWS
+  ════════════════════════════════════════ -->
+  <section id="flows">
+    <h2><span class="sec-num">5</span> Flows</h2>
+    <div class="info-box">
+      All flow functions return <code>{"completed": bool, "error_found": bool, "error_message": str | None}</code>
+    </div>
+
+    <div class="subsection">
+      <h3>login_flow.py / logout_flow.py</h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_login(page, role, credentials)</td><td>Create <code>LoginPage</code> and call <code>login()</code></td></tr>
+          <tr><td>execute_logout(page)</td><td>Create <code>LogoutPage</code> and call <code>logout()</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>front_desk_flow.py <span class="tag">flows/front_desk_flow.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_front_desk_registration(page, patient_entry, test_payment_entry)</td><td>Full registration: search or create patient → fill forms → add tests → payments → print bill/barcode → capture samples into runtime state</td></tr>
+          <tr><td>execute_front_desk_published_reports(page, patient_name)</td><td>Navigate to Published Reports and verify patient report is visible</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>accession_flow.py <span class="tag">flows/accession_flow.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_accession_flow(page, accession_entry)</td><td>Navigate → search → apply actions (refresh / accept / reject) per sample rule from DDT; matches samples from runtime state</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>phlebotomist_flow.py <span class="tag">flows/phlebotomist_flow.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_phlebotomist_flow(page, phlebo_entry)</td><td>Navigate → search → toggle each sample on/off as instructed by DDT</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>labtech_flow.py <span class="tag">flows/labtech_flow.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_labtech_search(page, search_entry)</td><td>Search patient, apply sample actions (accept/refresh/reject), open Report Entry</td></tr>
+          <tr><td>execute_labtech_tests(page, tests_entry)</td><td>Traverse sub-departments, fill test parameters, save or resample each test</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>doctor_flow.py <span class="tag">flows/doctor_flow.py</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_doctor_flow(page, patient_entry)</td><td>Full doctor workflow: search → navigate sub-depts → fill parameters → perform action (approve / partial_approve / retest / resample / rectify) per test</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>reassignment_flow.py / recollection_flow.py</h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>execute_reassignment_flow(page, reassignment_entry)</td><td>Navigate Re-Assignment Log → search → assign each rejected sample to a phlebotomist</td></tr>
+          <tr><td>execute_recollection_flow(page, recollection_entry)</td><td>Switch to Re-Collection tab → search → toggle collected samples → capture new sample IDs into runtime state</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       6. TESTS
+  ════════════════════════════════════════ -->
+  <section id="tests">
+    <h2><span class="sec-num">6</span> Tests</h2>
+
+    <div class="subsection">
+      <h3>E2E — Acceptance <span class="tag">tests/e2e/acceptance/</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>File</th><th>Patient</th><th>Scenario</th></tr></thead>
+        <tbody>
+          <tr><td>test_e2e_acceptance.py</td><td>P1</td><td>Full happy-path: Front Desk → Phlebotomist → Accession → LabTech → Doctor (5 phases)</td></tr>
+          <tr><td>test_e2e_b4_add_relative_rectification.py</td><td>P5</td><td>Acceptance flow + Add Relative + Doctor Rectify</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>E2E — Rejection <span class="tag">tests/e2e/rejection/</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>File</th><th>Patient</th><th>Scenario</th></tr></thead>
+        <tbody>
+          <tr><td>test_e2e_b1_accession_rejection.py</td><td>P2</td><td>Accession rejects sample → Reassign → Recollect → re-run</td></tr>
+          <tr><td>test_e2e_b2_labtech_rejection.py</td><td>P3</td><td>LabTech rejects sample → Reassign → Recollect → re-run</td></tr>
+          <tr><td>test_e2e_b3_doctor_resample.py</td><td>P1</td><td>Doctor requests resample → Recollect → re-run</td></tr>
+          <tr><td>test_e2e_bc_combined_rejection.py</td><td>P1</td><td>Combined accession + LabTech rejection in one flow</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>Regression <span class="tag">tests/regression/</span></h3>
+      <table class="fn-table">
+        <thead><tr><th>File</th><th>Scope</th></tr></thead>
+        <tbody>
+          <tr><td>test_login_smoke.py</td><td>Login smoke check for all roles</td></tr>
+          <tr><td>test_front_desk_regression.py</td><td>Patient registration end-to-end</td></tr>
+          <tr><td>test_accession_regression.py</td><td>Sample verification actions</td></tr>
+          <tr><td>test_phlebotomist_regression.py</td><td>Sample toggle actions</td></tr>
+          <tr><td>test_labtech_regression.py</td><td>Report entry and parameter fill</td></tr>
+          <tr><td>test_doctor_regression.py</td><td>Doctor review, approve, rectify</td></tr>
+          <tr><td>test_reassignment_regression.py</td><td>Re-assignment log workflow</td></tr>
+          <tr><td>test_recollection_regression.py</td><td>Re-collection tab toggle workflow</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>Pytest Markers</h3>
+      <table class="fn-table">
+        <thead><tr><th>Marker</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>smoke</td><td>Quick login/navigation checks</td></tr>
+          <tr><td>regression</td><td>Role-wise regression tests</td></tr>
+          <tr><td>e2e</td><td>Full end-to-end multi-role tests</td></tr>
+          <tr><td>acceptance</td><td>Happy-path acceptance flows</td></tr>
+          <tr><td>rejection</td><td>Rejection / recollection flows</td></tr>
+          <tr><td>labtech</td><td>Lab technician report entry tests</td></tr>
+          <tr><td>doctor</td><td>Doctor report review tests</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       7. FIXTURES
+  ════════════════════════════════════════ -->
+  <section id="fixtures">
+    <h2><span class="sec-num">7</span> Fixtures</h2>
+
+    <div class="subsection">
+      <h3>browser_fixtures.py</h3>
+      <table class="fn-table">
+        <thead><tr><th>Fixture</th><th>Scope</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>browser_instance</td><td>session</td><td>Launch Chromium maximized; yields <code>{browser, context, base_url}</code>; records video</td></tr>
+          <tr><td>page</td><td>function</td><td>Fresh page per test; navigates to <code>/login</code>; closes after test completes</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>session_fixtures.py</h3>
+      <table class="fn-table">
+        <thead><tr><th>Fixture</th><th>Scope</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>login_as</td><td>function</td><td>Yields callable <code>do_login(role: str)</code>; performs auto-logout on teardown; clears runtime state</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>data_fixtures.py</h3>
+      <table class="fn-table">
+        <thead><tr><th>Fixture</th><th>JSON Source</th></tr></thead>
+        <tbody>
+          <tr><td>login_credentials</td><td>test_data/login/login_ddt.json</td></tr>
+          <tr><td>front_desk_patient_data</td><td>test_data/front_desk/patient_data.json</td></tr>
+          <tr><td>front_desk_test_payment_data</td><td>test_data/front_desk/test_payment_data.json</td></tr>
+          <tr><td>phlebotomist_actions_data</td><td>test_data/phlebotomist/phlebotomist_actions.json</td></tr>
+          <tr><td>accession_actions_data</td><td>test_data/accession/accession_actions.json</td></tr>
+          <tr><td>labtech_search_data</td><td>test_data/lab_technician/labtech_search.json</td></tr>
+          <tr><td>labtech_tests_data</td><td>test_data/lab_technician/labtech_tests.json</td></tr>
+          <tr><td>doctor_actions_data</td><td>test_data/doctor/doctor_actions.json</td></tr>
+          <tr><td>reassignment_actions_data</td><td>test_data/accession/reassignment_actions.json</td></tr>
+          <tr><td>doctor_rectify_actions_data</td><td>test_data/doctor/doctor_rectify_actions.json</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       8. STATE MANAGEMENT
+  ════════════════════════════════════════ -->
+  <section id="state">
+    <h2><span class="sec-num">8</span> State Management</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+      <code>state/runtime_state.py</code> — Global state dict shared across all flows within a test session.
+    </p>
+
+    <div class="subsection">
+      <h3>Functions</h3>
+      <table class="fn-table">
+        <thead><tr><th>Function</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>set_value(key, val)</td><td>Set a value in the state dict</td></tr>
+          <tr><td>get_value(key)</td><td>Get a value from the state dict</td></tr>
+          <tr><td>clear()</td><td>Reset all state (lists cleared, scalars set to <code>None</code>)</td></tr>
+          <tr><td>add_sample(name, sub_department, id, index)</td><td>Append sample entry to the <code>samples</code> list</td></tr>
+          <tr><td>get_samples()</td><td>Return the full samples list</td></tr>
+          <tr><td>get_state_snapshot()</td><td>Return a shallow copy of the entire state dict</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>Tracked State Keys</h3>
+      <table class="fn-table">
+        <thead><tr><th>Key</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>current_role</td><td>str</td><td>Active logged-in role</td></tr>
+          <tr><td>username</td><td>str</td><td>Username of active session</td></tr>
+          <tr><td>login_timestamp</td><td>str</td><td>Time of last login</td></tr>
+          <tr><td>patient_id</td><td>str</td><td>Current patient ID (e.g. <code>P1</code>)</td></tr>
+          <tr><td>patient_name</td><td>str</td><td>Patient display name</td></tr>
+          <tr><td>patient_mobile</td><td>str</td><td>Patient mobile number</td></tr>
+          <tr><td>mobile_number</td><td>str</td><td>Mobile used for search</td></tr>
+          <tr><td>mobile_auto_filled</td><td>bool</td><td>Whether mobile was auto-populated by the system</td></tr>
+          <tr><td>samples</td><td>list</td><td>Captured sample dicts <code>{name, sub_dept, id, index}</code></td></tr>
+          <tr><td>tests</td><td>list</td><td>Test names processed in this session</td></tr>
+          <tr><td>balance</td><td>str</td><td>Auto-calculated balance from FD payment step</td></tr>
+          <tr><td>approval_status</td><td>str</td><td>Doctor approval outcome</td></tr>
+          <tr><td>new_id::&lt;key&gt;</td><td>str</td><td>Dynamic keys for recollected sample IDs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       9. LOCATORS
+  ════════════════════════════════════════ -->
+  <section id="locators">
+    <h2><span class="sec-num">9</span> Locators</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+      All selectors are centralized under <code>locators/</code>, organized by role. Never hardcode selectors in page or flow files.
+    </p>
+    <table class="fn-table">
+      <thead><tr><th>Module</th><th>Role / Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>base_locators.py</td><td>Shared constants — button names, common XPath patterns</td></tr>
+        <tr><td>accession/accession_locators.py</td><td>Sample Verification page selectors</td></tr>
+        <tr><td>accession/reassignment_locators.py</td><td>Re-Assignment Log selectors</td></tr>
+        <tr><td>doctor/doctor_locators.py</td><td>Doctor Report Review selectors</td></tr>
+        <tr><td>front_desk/front_desk_locators.py</td><td>Patient registration page selectors</td></tr>
+        <tr><td>lab_technician/labtech_locators.py</td><td>Report Entry page selectors</td></tr>
+        <tr><td>login/login_locators.py</td><td>Login form selectors</td></tr>
+        <tr><td>logout/logout_locators.py</td><td>Logout menu selectors</td></tr>
+        <tr><td>phlebotomist/phlebotomist_locators.py</td><td>Sample Tracker page selectors</td></tr>
+        <tr><td>phlebotomist/recollection_locators.py</td><td>Re-Collection tab selectors</td></tr>
+      </tbody>
+    </table>
+
+    <div class="subsection" style="margin-top:20px;">
+      <h3>Common Constants (base_locators.py)</h3>
+      <pre>CONFIRM_YES_BUTTON        = "Yes"
+CONFIRM_NO_BUTTON         = "No"
+DATE_RANGE_PLACEHOLDER    = "DD/MM/YYYY - DD/MM/YYYY"
+APPLY_FILTER_TEXT         = "Apply Filter"
+REPORT_ENTRY_TEXT         = "Report Entry"
+NEXT_SUB_DEPT_BUTTON      = "Next Sub-Department"
+PREV_SUB_DEPT_BUTTON      = "Previous Sub-Department"
+SAVE_BUTTON               = "Save"</pre>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       10. TEST DATA
+  ════════════════════════════════════════ -->
+  <section id="testdata">
+    <h2><span class="sec-num">10</span> Test Data (DDT)</h2>
+    <div class="warn-box">
+      Never write <code>pid = "P1"</code> (or any patient ID literal) inside a <code>.py</code> file.
+      Patient IDs live only in <code>.claude/test_run_session.json</code>.
+    </div>
+
+    <div class="subsection">
+      <h3>JSON File Inventory</h3>
+      <table class="fn-table">
+        <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>login/login_ddt.json</td><td>Login credentials per role</td></tr>
+          <tr><td>front_desk/patient_data.json</td><td>Patient registration data (demographics, address)</td></tr>
+          <tr><td>front_desk/test_payment_data.json</td><td>Test names + payment amounts per patient</td></tr>
+          <tr><td>accession/accession_actions.json</td><td>Sample action rules (accept / reject / refresh)</td></tr>
+          <tr><td>accession/reassignment_actions.json</td><td>Re-assignment target and notes</td></tr>
+          <tr><td>phlebotomist/phlebotomist_actions.json</td><td>Sample toggle instructions per patient</td></tr>
+          <tr><td>lab_technician/labtech_search.json</td><td>Search filters + sample action data</td></tr>
+          <tr><td>lab_technician/labtech_tests.json</td><td>Test parameter values to enter</td></tr>
+          <tr><td>doctor/doctor_actions.json</td><td>Doctor review: sub-departments, tests, actions, params</td></tr>
+          <tr><td>doctor/doctor_rectify_actions.json</td><td>Doctor rectification flow data</td></tr>
+          <tr><td>e2e/acceptance.json</td><td>E2E acceptance flow — all phases, P1</td></tr>
+          <tr><td>e2e/b1_accession_rejection.json</td><td>E2E accession rejection scenario, P2</td></tr>
+          <tr><td>e2e/b2_labtech_rejection.json</td><td>E2E labtech rejection scenario, P3</td></tr>
+          <tr><td>e2e/b3_doctor_resample.json</td><td>E2E doctor resample scenario, P1</td></tr>
+          <tr><td>e2e/b4_add_relative_rectification.json</td><td>E2E add relative + rectify scenario, P5</td></tr>
+          <tr><td>e2e/bc_combined_rejection.json</td><td>E2E combined rejection scenario, P1</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>DDT Lookup Pattern</h3>
+      <pre>from utils.file_utils import load_json
+from pathlib import Path
+
+DATA = load_json(Path("test_data/role/file.json"))
+
+def _entry(lst, key, val):
+    return next(e for e in lst if e[key] == val)
+
+# In test:
+entry = _entry(DATA["patients"], "patient_id_ref", "P1")
+result = execute_some_flow(page, entry)
+assert result["completed"]</pre>
+    </div>
+
+    <div class="subsection">
+      <h3>Patient ID Registry (.claude/test_run_session.json)</h3>
+      <table class="fn-table">
+        <thead><tr><th>Test</th><th>Patient</th><th>Scenario</th></tr></thead>
+        <tbody>
+          <tr><td>test_e2e_acceptance</td><td>P1</td><td>Full acceptance, 5 phases</td></tr>
+          <tr><td>test_e2e_b4_add_relative_rectification</td><td>P5</td><td>Add relative + doctor rectify</td></tr>
+          <tr><td>test_e2e_b1_accession_rejection</td><td>P2</td><td>Accession rejects sample</td></tr>
+          <tr><td>test_e2e_b2_labtech_rejection</td><td>P3</td><td>LabTech rejects sample</td></tr>
+          <tr><td>test_e2e_b3_doctor_resample</td><td>P1</td><td>Doctor requests resample</td></tr>
+          <tr><td>test_e2e_bc_combined_rejection</td><td>P1</td><td>Combined accession + LT rejection</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       11. UTILS
+  ════════════════════════════════════════ -->
+  <section id="utils">
+    <h2><span class="sec-num">11</span> Utils</h2>
+    <table class="fn-table">
+      <thead><tr><th>Module</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>file_utils.py</td><td><code>load_json(path)</code>, <code>load_yaml(path)</code> — load test data and config files</td></tr>
+        <tr><td>reporting.py</td><td>Generate HTML/JSON/CSV/Allure summary reports from test results</td></tr>
+        <tr><td>phase_tracker.py</td><td>Track and log test phase progress (per-step pass/fail logging)</td></tr>
+        <tr><td>logger.py</td><td>Centralized logging utilities with role-aware context</td></tr>
+        <tr><td>error_detector.py</td><td>Detect UI error toasts and alert banners on any page</td></tr>
+        <tr><td>test_helpers.py</td><td>Shared helper functions used across test files</td></tr>
+        <tr><td>wait_utils.py</td><td>Custom wait condition utilities (beyond Playwright built-ins)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       12. CONFIG
+  ════════════════════════════════════════ -->
+  <section id="config">
+    <h2><span class="sec-num">12</span> Config</h2>
+
+    <div class="subsection">
+      <h3>test_config.yaml</h3>
+      <pre>timeout: 30000        # Page timeout: 30 seconds
+slow_mo: 50           # Action delay: 50ms per action
+headless: false       # Run with visible browser window</pre>
+    </div>
+
+    <div class="subsection">
+      <h3>urls.yaml</h3>
+      <pre>base_url: "https://frontenddevh1.specigo.com/"</pre>
+    </div>
+
+    <div class="subsection">
+      <h3>pytest.ini</h3>
+      <pre>[pytest]
+testpaths = tests
+python_files = test_*.py
+python_classes = Test*
+python_functions = test_*
+addopts =
+    -s -v --tb=short
+    --html=reports/html/pytest_report.html
+    --json-report --json-report-file=reports/json/pytest_report.json
+    --alluredir=reports/allure-results
+markers =
+    smoke, regression, e2e, acceptance,
+    rejection, labtech, doctor</pre>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       13. ARTIFACTS & REPORTS
+  ════════════════════════════════════════ -->
+  <section id="artifacts">
+    <h2><span class="sec-num">13</span> Artifacts &amp; Reports</h2>
+    <table class="fn-table">
+      <thead><tr><th>Output</th><th>Path</th></tr></thead>
+      <tbody>
+        <tr><td>Failure screenshots</td><td><code>artifacts/failures/</code></td></tr>
+        <tr><td>Success screenshots</td><td><code>artifacts/success/</code></td></tr>
+        <tr><td>Traces (failures only)</td><td><code>artifacts/traces/</code></td></tr>
+        <tr><td>Test videos</td><td><code>artifacts/videos/</code></td></tr>
+        <tr><td>Pytest HTML report</td><td><code>reports/html/pytest_report.html</code></td></tr>
+        <tr><td>Pytest JSON report</td><td><code>reports/json/pytest_report.json</code></td></tr>
+        <tr><td>Allure raw data</td><td><code>reports/allure-results/</code></td></tr>
+        <tr><td>Allure HTML (after generate)</td><td><code>reports/allure-report/</code></td></tr>
+        <tr><td>Summary HTML/JSON/CSV</td><td><code>reports/summary_report.*</code></td></tr>
+        <tr><td>Phase report</td><td><code>reports/patient_phase_report.html</code></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       14. CODING PATTERNS
+  ════════════════════════════════════════ -->
+  <section id="patterns">
+    <h2><span class="sec-num">14</span> Key Coding Patterns</h2>
+
+    <div class="subsection">
+      <h3>AntD Quirks</h3>
+      <table class="fn-table">
+        <thead><tr><th>Problem</th><th>Solution</th></tr></thead>
+        <tbody>
+          <tr><td>Overlay intercepts click</td><td>Use JS dispatch: <code>el.evaluate("el => el.click()")</code></td></tr>
+          <tr><td>Combobox with pre-selected item</td><td>Use <code>click(force=True)</code></td></tr>
+          <tr><td>Salutation includes dot (<code>Mr.</code>)</td><td>Normalize in <code>select_salutation</code> method</td></tr>
+          <tr><td>Search combobox</td><td>Use <code>type()</code> with <code>delay=80</code>, NOT <code>fill()</code></td></tr>
+          <tr><td><code>#rc_select_N</code> IDs shift dynamically</td><td>Always use label-based XPath, never ID-based</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>General Rules</h3>
+      <table class="fn-table">
+        <thead><tr><th>Rule</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr><td>Scroll before below-fold elements</td><td>AntD lists require element visibility before interaction</td></tr>
+          <tr><td>Payment/number inputs → <code>type()</code> not <code>fill()</code></td><td><code>fill()</code> triggers value events that break AntD validators</td></tr>
+          <tr><td><code>SEARCH_MOBILE_NTH = 3</code> on LT and Doctor pages</td><td>4 search fields exist on those pages (0-indexed), mobile is index 3</td></tr>
+          <tr><td>Sample capture pattern</td><td><code>get_by_text("SampleName -", exact=True)</code> then <code>xpath=following::div[1]</code></td></tr>
+          <tr><td>Print Bill opens new tab</td><td>Switch back with <code>page.context.pages[0].bring_to_front()</code></td></tr>
+          <tr><td>Sub-dept navigation</td><td>Bidirectional Next/Prev loop, max 20 attempts</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <h3>MNC Standard (required on all new code)</h3>
+      <div class="card-grid">
+        <div class="card">
+          <h4>Type Hints</h4>
+          <p>All parameters and return values must have type annotations.</p>
+        </div>
+        <div class="card">
+          <h4>Docstrings</h4>
+          <p>All classes and public methods must have docstrings.</p>
+        </div>
+        <div class="card">
+          <h4>BasePage Inheritance</h4>
+          <p>All page classes must inherit from <code>BasePage</code>.</p>
+        </div>
+        <div class="card">
+          <h4>Section Comments</h4>
+          <p>Use <code># --- Section Name ---</code> to divide logical blocks within methods.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Highlight active nav link based on scroll position
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('#sidebar nav a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`#sidebar nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
