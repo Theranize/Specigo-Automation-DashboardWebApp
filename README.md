@@ -92,11 +92,38 @@ run smoke                # Smoke tests
 run all                  # Entire test suite
 ```
 
+**Run specific patients by ID:**
+
+```batch
+run patient P1               # Single patient
+run patient P1 P3 P5         # Multiple patients
+run patient P1 staging       # Single patient on staging env
+run patient P1 P3 staging    # Multiple patients on staging
+```
+
+**Optional environment argument (default = dev):**
+
+```batch
+run acceptance               # dev  (https://frontenddevh1.specigo.com/)
+run acceptance staging       # staging (https://staging.specigo.com/)
+```
+
 **Run a specific file or pass custom args:**
 
 ```batch
 run tests/e2e/acceptance/test_e2e_p5_relative_acceptance.py
 run -m doctor -v
+```
+
+**Run regression by role (`run_regression.bat`):**
+
+```batch
+run_regression frontdesk     # alias: fd
+run_regression phlebotomist  # alias: phlebo
+run_regression accession
+run_regression labtech       # alias: lt
+run_regression doctor
+run_regression doctor staging
 ```
 
 **Generate Allure HTML report (manual, after run):**
@@ -105,22 +132,27 @@ run -m doctor -v
 allure generate reports/allure-results -o reports/allure-report --clean
 ```
 
-> `run.bat` always uses `.\Test\Scripts\pytest.exe` (venv). Never use the system `pytest`.
+> `run.bat` and `run_regression.bat` always use `.\Test\Scripts\pytest.exe` (venv). Never use the system `pytest`.
 
 ---
 
 ## 3. Directory Structure
 
 ```
-D:/automation/playwright/
+D:/specigo-automation/Specigo-Automation-DashboardWebApp/
 ├── .claude/
-│   └── test_run_session.json       # E2E test → patient ID mapping
+│   ├── test_run_session.json       # E2E test → patient ID mapping
+│   └── settings.local.json
 ├── config/
 │   ├── test_config.yaml            # Browser/timeout settings
 │   └── urls.yaml                   # Base URL
+├── core/
+├── docs/
+│   ├── e2e_changes.md
+│   └── project_reference.html
 ├── fixtures/
 │   ├── browser_fixtures.py         # browser_instance, page
-│   ├── data_fixtures.py            # 10 DDT data fixtures
+│   ├── data_fixtures.py            # DDT data fixtures
 │   └── session_fixtures.py         # login_as
 ├── flows/
 │   ├── login_flow.py
@@ -152,6 +184,8 @@ D:/automation/playwright/
 │   └── regression/
 ├── utils/
 ├── conftest.py
+├── run.bat
+├── run_regression.bat
 └── pytest.ini
 ```
 
@@ -456,6 +490,7 @@ Flow functions orchestrate page calls into complete business workflows. They alw
 | `test_e2e_p5_relative_acceptance.py` | P5 | Select existing relative (Wife) → full acceptance all 7 tests |
 | `test_e2e_p7_limit_error.py` | P7 | Add-relative limit error — 10-patient cap reached |
 | `test_e2e_p8_new_patient_acceptance.py` | P8 | New patient Priya Sharma → full acceptance all 7 tests |
+| `test_e2e_p10_duplicate_mobile_error.py` | P11 | New patient form with duplicate mobile 9999999999 — verify error |
 | `test_e2e_p12_relative_acceptance.py` | P12 | Add new relative Vikram Kumar → full acceptance + Doctor rectify |
 | `test_e2e_p14_partial_approve.py` | P14 | New patient Sanjay Mehta → 3 tests, Doctor partial_approve |
 
@@ -466,6 +501,7 @@ Flow functions orchestrate page calls into complete business workflows. They alw
 | `test_e2e_p2_rejection.py` | P2 | 3-cycle rejection: Acc:Serum → LT:24h urine → Dr:LFT resample → partial_approve |
 | `test_e2e_p6_rejection.py` | P6 | 3-cycle rejection: Acc:Urine → LT:Serum → Dr:CBC resample → full approve |
 | `test_e2e_p9_new_patient_rejection.py` | P9 | New patient Rohan Desai → 3-cycle rejection → full approve |
+| `test_e2e_p10_new_patient_partial.py` | P10 | New patient Kavita Nair → Acc:24h urine reject + Doctor approve all + rectify LFT |
 | `test_e2e_p13_partial_rejection.py` | P13 | Acc:Serum rejected, LT:24h urine rejected; Doctor approves all (local date) |
 
 ### Regression (`tests/regression/`)
@@ -519,8 +555,7 @@ Flow functions orchestrate page calls into complete business workflows. They alw
 | `front_desk_test_payment_data` | `test_data/front_desk/test_payment_data.json` |
 | `phlebotomist_actions_data` | `test_data/phlebotomist/phlebotomist_actions.json` |
 | `accession_actions_data` | `test_data/accession/accession_actions.json` |
-| `labtech_search_data` | `test_data/lab_technician/labtech_search.json` |
-| `labtech_tests_data` | `test_data/lab_technician/labtech_tests.json` |
+| `labtech_actions_data` | `test_data/lab_technician/labtech_actions.json` |
 | `doctor_actions_data` | `test_data/doctor/doctor_actions.json` |
 | `reassignment_actions_data` | `test_data/accession/reassignment_actions.json` |
 | `doctor_rectify_actions_data` | `test_data/doctor/doctor_rectify_actions.json` |
@@ -607,20 +642,14 @@ test_data/
 ├── accession/
 │   ├── accession_actions.json
 │   └── reassignment_actions.json
-├── phlebotomist/phlebotomist_actions.json
+├── phlebotomist/
+│   ├── phlebotomist_actions.json
+│   └── recollection_actions.json
 ├── lab_technician/
-│   ├── labtech_search.json
-│   └── labtech_tests.json
-├── doctor/
-│   ├── doctor_actions.json
-│   └── doctor_rectify_actions.json
-└── e2e/
-    ├── acceptance.json
-    ├── b1_accession_rejection.json
-    ├── b2_labtech_rejection.json
-    ├── b3_doctor_resample.json
-    ├── b4_add_relative_rectification.json
-    └── bc_combined_rejection.json
+│   └── labtech_actions.json
+└── doctor/
+    ├── doctor_actions.json
+    └── doctor_rectify_actions.json
 ```
 
 **DDT lookup pattern:**
@@ -650,13 +679,13 @@ assert result["completed"]
 | P5 | Sunita Kumari Mishra (Wife) | 8839900148 | Select existing relative → full acceptance |
 | P6 | Aditya Kumar Mishra | 7777777777 | 3-cycle rejection → full approve |
 | P7 | — | 8839900148 | Add-relative limit error (10-patient cap) |
-| P8 | Priya Sharma | 8900000005 | New patient → full acceptance |
-| P9 | Rohan Desai | 8900000006 | New patient → 3-cycle rejection → full approve |
-| P10 | Kavita Nair | 8900000007 | New patient → Acc:24h urine reject + Doctor rectify LFT |
-| P11 | Rajesh Kumar | 9999999999 | Duplicate mobile error |
+| P8 | Priya Sharma | 8900000010 | New patient → full acceptance |
+| P9 | Rohan Desai | 8900000011 | New patient → 3-cycle rejection → full approve |
+| P10 | Kavita Nair | 8900000012 | New patient → Acc:24h urine reject + Doctor rectify LFT |
+| P11 | Rajesh Kumar | 9999999999 | Duplicate mobile error (test file: `test_e2e_p10_duplicate_mobile_error.py`) |
 | P12 | Vikram Kumar Mishra (Brother) | 7777777777 | Add new relative → full acceptance + Doctor rectify |
 | P13 | Aditya Kumar Mishra | 7777777777 | Partial rejection Acc+LT, Doctor approves (local date) |
-| P14 | Sanjay Mehta | 8900000008 | New patient → 3 tests, Doctor partial_approve |
+| P14 | Sanjay Mehta | 8900000013 | New patient → 3 tests, Doctor partial_approve |
 
 > Never write `pid = "P1"` in a `.py` file. Patient IDs live only in `.claude/test_run_session.json`.
 
