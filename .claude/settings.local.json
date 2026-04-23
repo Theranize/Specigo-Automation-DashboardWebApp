@@ -87,7 +87,12 @@
       "Bash(rm -f reports/patient_phase_report*.html reports/patient_phase_report*.json)",
       "Bash(cmd:*)",
       "Bash(powershell.exe:*)",
-      "Bash(.\\\\Test\\\\Scripts\\\\python.exe *)"
+      "Bash(.\\\\Test\\\\Scripts\\\\python.exe *)",
+      "Bash(Test\\\\\\\\Scripts\\\\\\\\pip list *)",
+      "Bash(where pandoc *)",
+      "Bash(where wkhtmltopdf *)",
+      "Bash(where chrome *)",
+      "Bash(./Test/Scripts/pip.exe list *)"
     ]
   }
 }
