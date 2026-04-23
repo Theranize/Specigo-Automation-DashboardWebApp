@@ -49,10 +49,13 @@ from utils.reporting import (
     report_registry,
     phase_html_generator,
     phase_json_generator,
+    stakeholder_html_generator,
+    stakeholder_pdf_generator,
     save_run_snapshot,
     register_session,
     get_batch_number,
     resolve_report_paths,
+    REPORTS_ROOT,
 )
 from utils.error_detector import detect_ui_errors
 from utils.phase_tracker import phase_tracker
@@ -157,8 +160,42 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     print("  [SESSION SYSTEM]  Summary report (Batch {})          -> {}".format(batch, s_html))
 
+    stakeholder_html_path, stakeholder_pdf_path, stakeholder_pdf_ok = _generate_stakeholder_report(
+        results, summary, run_id, phase_data
+    )
+
     allure_ok = _run_allure_generate()
-    _print_summary(summary, allure_ok, s_html, s_json, s_csv, ph_html, session_num, batch)
+    _print_summary(
+        summary, allure_ok, s_html, s_json, s_csv, ph_html, session_num, batch,
+        stakeholder_html=stakeholder_html_path,
+        stakeholder_pdf=stakeholder_pdf_path,
+        stakeholder_pdf_ok=stakeholder_pdf_ok,
+    )
+
+
+def _generate_stakeholder_report(results, summary, run_id, phase_data=None):
+    """Render the manager-facing HTML + PDF report. Never fails the session."""
+    out_dir  = REPORTS_ROOT / "stakeholder"
+    run_html = out_dir / f"{run_id}.html"
+    run_pdf  = out_dir / f"{run_id}.pdf"
+    latest_html = out_dir / "latest.html"
+    latest_pdf  = out_dir / "latest.pdf"
+
+    try:
+        stakeholder_html_generator.generate(results, summary, run_html, phase_data=phase_data)
+        shutil.copy2(run_html, latest_html)
+    except Exception as exc:
+        print(f"  [STAKEHOLDER] HTML skipped: {exc}")
+        return None, None, False
+
+    pdf_ok = stakeholder_pdf_generator.generate(run_html, run_pdf)
+    if pdf_ok:
+        try:
+            shutil.copy2(run_pdf, latest_pdf)
+        except OSError as exc:
+            print(f"  [STAKEHOLDER] latest.pdf copy skipped: {exc}")
+
+    return latest_html, (latest_pdf if pdf_ok else None), pdf_ok
 
 
 def _run_allure_generate() -> bool:
@@ -214,14 +251,17 @@ def _run_allure_generate() -> bool:
 
 
 def _print_summary(
-    summary:          dict,
-    allure_generated: bool           = False,
-    summary_html:     Optional[Path] = None,
-    summary_json:     Optional[Path] = None,
-    summary_csv:      Optional[Path] = None,
-    phase_html:       Optional[Path] = None,
-    session_num:      int            = 0,
-    batch:            int            = 1,
+    summary:             dict,
+    allure_generated:    bool           = False,
+    summary_html:        Optional[Path] = None,
+    summary_json:        Optional[Path] = None,
+    summary_csv:         Optional[Path] = None,
+    phase_html:          Optional[Path] = None,
+    session_num:         int            = 0,
+    batch:               int            = 1,
+    stakeholder_html:    Optional[Path] = None,
+    stakeholder_pdf:     Optional[Path] = None,
+    stakeholder_pdf_ok:  bool           = False,
 ) -> None:
     """Print a concise session summary banner to stdout."""
     s_html  = summary_html or SUMMARY_HTML
@@ -264,6 +304,9 @@ def _print_summary(
         "    JSON -> {}".format(s_json),
         "    CSV  -> {}".format(s_csv),
         phase_line,
+        "  Stakeholder Report:",
+        "    HTML -> {}".format(stakeholder_html or "(not generated)"),
+        "    PDF  -> {}".format(stakeholder_pdf or "(not generated)"),
         "  Allure Report:",
         "    Results -> {}  (raw)".format(ALLURE_RESULTS_DIR),
         "    HTML    -> {}  (open in browser)".format(allure_html),

@@ -63,6 +63,8 @@ from utils.reporting.singletons import (
     csv_generator,
     phase_html_generator,
     phase_json_generator,
+    stakeholder_html_generator,
+    stakeholder_pdf_generator,
 )
 
 __all__ = [
@@ -88,4 +90,5 @@ __all__ = [
     "artifact_manager", "report_registry",
     "html_generator", "json_generator", "csv_generator",
     "phase_html_generator", "phase_json_generator",
+    "stakeholder_html_generator", "stakeholder_pdf_generator",
 ]
