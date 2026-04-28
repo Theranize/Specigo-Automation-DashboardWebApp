@@ -92,7 +92,8 @@
       "Bash(where pandoc *)",
       "Bash(where wkhtmltopdf *)",
       "Bash(where chrome *)",
-      "Bash(./Test/Scripts/pip.exe list *)"
+      "Bash(./Test/Scripts/pip.exe list *)",
+      "Bash(D:/specigo-automation/Specigo-Automation-DashboardWebApp/Test/Scripts/python.exe -c \"import PIL; print\\(PIL.__version__\\)\")"
     ]
   }
 }

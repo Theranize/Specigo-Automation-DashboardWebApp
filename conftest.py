@@ -58,6 +58,7 @@ from utils.reporting import (
     REPORTS_ROOT,
 )
 from utils.error_detector import detect_ui_errors
+from utils.failure_artifact import write_highlight_sidecar
 from utils.phase_tracker import phase_tracker
 from state import runtime_state
 
@@ -456,6 +457,7 @@ def _capture_failure_screenshots(
     try:
         shot_p = artifact_manager.screenshot_path(test_name, patient_id, step)
         page.screenshot(path=str(shot_p), full_page=True)
+        write_highlight_sidecar(page, str(shot_p))
         primary_path = str(shot_p)
         item.stash[_KEY_SCREENSHOT] = primary_path
     except Exception:
@@ -466,6 +468,7 @@ def _capture_failure_screenshots(
         if ui_err:
             ui_p = artifact_manager.screenshot_path(test_name, patient_id, "ui_error")
             page.screenshot(path=str(ui_p), full_page=True)
+            write_highlight_sidecar(page, str(ui_p))
             if primary_path == "---":
                 primary_path = str(ui_p)
     except Exception:

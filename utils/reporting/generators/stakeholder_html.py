@@ -11,9 +11,7 @@ No external assets. Safe to email or drop into Slack.
 """
 from __future__ import annotations
 
-import base64
 import json
-import mimetypes
 from collections import OrderedDict
 from datetime import datetime
 from html import escape
@@ -22,6 +20,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from utils.reporting.constants import flow_label, patient_label
+from utils.reporting.embed import embed_image as _embed_image
+from utils.reporting.format import fmt_duration as _fmt_duration
 from utils.reporting.models import TestResult
 from utils.reporting.session_context import marker_for, scenario_for
 
@@ -174,32 +174,6 @@ def _row_class(status: str) -> str:
     if s == "passed":  return "pass"
     if s in ("failed", "error"): return "fail"
     return "skip"
-
-
-def _embed_image(path_str: str) -> Optional[str]:
-    """Read an image file and return a data: URL, or None if unreadable."""
-    if not path_str:
-        return None
-    try:
-        p = Path(path_str)
-        if not p.is_file():
-            return None
-        mime = mimetypes.guess_type(p.name)[0] or "image/png"
-        data = base64.b64encode(p.read_bytes()).decode("ascii")
-        return f"data:{mime};base64,{data}"
-    except (IOError, OSError):
-        return None
-
-
-def _fmt_duration(seconds: float) -> str:
-    try:
-        s = float(seconds)
-    except (TypeError, ValueError):
-        return "-"
-    if s < 60:
-        return f"{s:.1f}s"
-    m, rem = divmod(int(s), 60)
-    return f"{m}m {rem:02d}s"
 
 
 def _donut_svg(passed: int, failed: int, skipped: int, size: int = 140) -> str:

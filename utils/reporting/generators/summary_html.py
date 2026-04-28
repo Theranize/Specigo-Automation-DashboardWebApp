@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import List
 
 from utils.reporting.constants import patient_label
+from utils.reporting.format import fmt_duration
 from utils.reporting.models import TestResult
 from utils.reporting.session import _load_run_history
 
@@ -103,13 +104,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
              letter-spacing:.07em;color:var(--text2)}
 .chart-wrap{position:relative;width:100%;display:flex;align-items:center;
             justify-content:center;min-height:200px}
-/* ===== PHASE LINK BAR ===== */
-.phase-link-bar{background:#f0f5ff;border:1px solid #adc6ff;border-radius:var(--r);
-                padding:10px 20px;margin-bottom:16px;display:flex;align-items:center;
-                justify-content:space-between;font-size:.85rem}
-.phase-link-bar a{color:var(--blue);font-weight:600;text-decoration:none;
-                  display:inline-flex;align-items:center;gap:5px}
-.phase-link-bar a:hover{text-decoration:underline}
 /* ===== TOOLBAR ===== */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .fbtn{padding:5px 14px;border:1px solid var(--border);border-radius:20px;
@@ -318,10 +312,14 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   var trendEl = document.getElementById('trendChart');
   if (trendEl && window.Chart && _RUN_HISTORY.length > 0) {
-    var labels = _RUN_HISTORY.map(function(r) {
+    // Home-page trend shows only the most recent 20 sessions so a long
+    // history doesn't compress the bars into illegibility. Full history
+    // remains available on the Run History tab (trendChartHist).
+    var _recent = _RUN_HISTORY.slice(-20);
+    var labels = _recent.map(function(r) {
       return r.session_num ? 'Session ' + r.session_num : (r.run_id || '').replace('run_','').replace(/_/g,' ');
     });
-    var rates = _RUN_HISTORY.map(function(r) { return r.summary ? r.summary.pass_rate : 0; });
+    var rates = _recent.map(function(r) { return r.summary ? r.summary.pass_rate : 0; });
     var colors = rates.map(function(v) {
       return v >= 90 ? '#52c41a' : (v >= 70 ? '#fa8c16' : '#ff4d4f');
     });
@@ -341,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
           legend: { display: false },
           tooltip: { callbacks: {
             title: function(items) {
-              var r = _RUN_HISTORY[items[0].dataIndex];
+              var r = _recent[items[0].dataIndex];
               var tests = (r.tests_executed || []).join(', ') || '(none)';
               return (r.session_num ? 'Session ' + r.session_num : items[0].label) + ' \u2014 ' + tests;
             },
@@ -487,7 +485,7 @@ class HtmlReportGenerator:
       </div>
       <div class="rm-item">
         <div class="rm-lbl">Duration</div>
-        <div class="rm-val">{dur}s</div>
+        <div class="rm-val">{fmt_duration(dur)}</div>
       </div>
       <div class="rm-item">
         <div class="rm-lbl">Total Tests</div>
@@ -540,19 +538,11 @@ class HtmlReportGenerator:
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Pass Rate Trend &mdash; By Session</div>
+        <div class="chart-title">Pass Rate Trend &mdash; Last 20 Sessions</div>
         <div class="chart-wrap">
           <canvas id="trendChart"></canvas>
         </div>
       </div>
-    </div>
-
-    <!-- Phase report link bar -->
-    <div class="phase-link-bar">
-      <span>E2E phase-level breakdown available in the Phase Report</span>
-      <a href="patient_phase_report.html" target="_blank">
-        Open Phase Breakdown Report &rarr;
-      </a>
     </div>
 
     <!-- Toolbar -->
@@ -650,8 +640,6 @@ class HtmlReportGenerator:
 
 <div class="footer">
   Summary Report &bull; {escape(gen_at)}
-  &nbsp;&bull;&nbsp;
-  <a href="patient_phase_report.html" target="_blank">Phase Breakdown Report</a>
 </div>
 
 <script>
@@ -747,7 +735,7 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
             f'<td>{badge}</td>'
             f'<td>{err_td}</td>'
             f'<td>{shot}</td>'
-            f'<td class="dur-cell">{r.duration}s</td>'
+            f'<td class="dur-cell">{fmt_duration(r.duration)}</td>'
             f'</tr>'
         )
 
@@ -830,7 +818,7 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
                 f'<td style="color:#389e0d;font-weight:600">{psd}</td>'
                 f'<td style="color:#cf1322;font-weight:600">{fld}</td>'
                 f'<td style="color:{rate_color};font-weight:700">{rate}%</td>'
-                f'<td>{dur}s</td>'
+                f'<td>{fmt_duration(dur)}</td>'
                 f'<td><button class="open-btn" onclick="toggleRun(this, {idx})">Open</button></td>'
                 f'</tr>'
                 f'{self._run_detail_sub_table(run, idx)}'
@@ -857,7 +845,7 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
                     f'<td>{escape(r.get("module", ""))}</td>'
                     f'<td title="{escape(pid)}">{disp}</td>'
                     f'<td>{badge}</td>'
-                    f'<td>{r.get("duration", 0)}s</td>'
+                    f'<td>{fmt_duration(r.get("duration", 0))}</td>'
                     f'</tr>'
                 )
             inner = f"""

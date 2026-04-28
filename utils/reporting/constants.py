@@ -53,13 +53,124 @@ JSON_REPORT_PATH = SUMMARY_JSON
 # FLOW REGISTRY  –  single source of truth for all E2E flows
 # =============================================================================
 #: Adding a new test:  append one dict here; no other file needs editing.
+# Standard 5-phase pipeline — used by full-acceptance-style tests.
+_STD_ACCEPTANCE: List[str] = [
+    "Front Desk", "Phlebotomist", "Accession",
+    "Lab Technician", "Doctor",
+]
+
+# Standard 3-cycle rejection pipeline — Acc reject -> recollect -> re-accept,
+# LT reject -> recollect -> re-accept, then Doctor resample -> re-cycle ->
+# final approval. Concrete sample names (Serum / Urine / 24h / WB / etc.) are
+# captured per-test below; the structural shape is constant.
+_REJECTION_3CYCLE_TEMPLATE: List[str] = [
+    "Front Desk", "Phlebotomist",
+    "Accession (Reject {a})", "Phlebotomist (Recollect {a})", "Accession (Re-accept {a})",
+    "Lab Technician (Reject {b})",
+    "Accession (Reassign {b})", "Phlebotomist (Recollect {b})", "Accession (Re-accept {b})",
+    "Lab Technician (Save All)",
+    "Doctor (Resample {c})",
+    "Accession (Reassign {d})", "Phlebotomist (Recollect {d})", "Accession (Re-accept {d})",
+    "Lab Technician (Save {c})",
+    "Doctor ({final} {c})",
+]
+
+
+def _rejection_3cycle(a: str, b: str, c: str, d: str, final: str) -> List[str]:
+    """Materialise the 3-cycle rejection phase-order template with concrete sample names."""
+    return [p.format(a=a, b=b, c=c, d=d, final=final) for p in _REJECTION_3CYCLE_TEMPLATE]
+
+
 FLOW_REGISTRY: Dict[str, Dict] = {
+    # ── Acceptance flows ──────────────────────────────────────────────────
     "test_e2e_acceptance": {
         "label":       "E2E Acceptance Flow",
         "short":       "e2eacceptance",
+        "phase_order": _STD_ACCEPTANCE + ["Published Reports"],
+    },
+    "test_e2e_p3_partial_approve": {
+        "label":       "P3 Partial Approve",
+        "short":       "e2ep3partial",
+        "phase_order": _STD_ACCEPTANCE,
+    },
+    "test_e2e_p4_rectification": {
+        "label":       "P4 Rectification",
+        "short":       "e2ep4rectify",
         "phase_order": [
-            "Front Desk", "Phlebotomist", "Accession",
-            "Lab Technician", "Doctor", "Published Reports",
+            "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
+            "Doctor (Approve)", "Doctor (Rectify)",
+        ],
+    },
+    "test_e2e_p5_relative_acceptance": {
+        "label":       "P5 Relative Acceptance",
+        "short":       "e2ep5relative",
+        "phase_order": _STD_ACCEPTANCE,
+    },
+    "test_e2e_p7_limit_error": {
+        "label":       "P7 Add-Relative Limit",
+        "short":       "e2ep7limit",
+        "phase_order": ["Front Desk"],
+    },
+    "test_e2e_p8_new_patient_acceptance": {
+        "label":       "P8 New Patient Acceptance",
+        "short":       "e2ep8newaccept",
+        "phase_order": _STD_ACCEPTANCE,
+    },
+    "test_e2e_p10_duplicate_mobile_error": {
+        "label":       "P11 Duplicate Mobile",
+        "short":       "e2ep11dupmobile",
+        "phase_order": ["Front Desk"],
+    },
+    "test_e2e_p12_relative_acceptance": {
+        "label":       "P12 New Relative + Rectify",
+        "short":       "e2ep12relrectify",
+        "phase_order": _STD_ACCEPTANCE,
+    },
+    "test_e2e_p14_partial_approve": {
+        "label":       "P14 Partial Approve",
+        "short":       "e2ep14partial",
+        "phase_order": [
+            "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
+            "Doctor (Partial Approve)",
+        ],
+    },
+
+    # ── Rejection flows ───────────────────────────────────────────────────
+    "test_e2e_p2_rejection": {
+        "label":       "P2 3-Cycle Rejection",
+        "short":       "e2ep2rejection",
+        "phase_order": _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Partial Approve"),
+    },
+    "test_e2e_p6_rejection": {
+        "label":       "P6 3-Cycle Rejection",
+        "short":       "e2ep6rejection",
+        "phase_order": _rejection_3cycle("Urine", "Serum", "CBC", "WB", "Approve"),
+    },
+    "test_e2e_p9_new_patient_rejection": {
+        "label":       "P9 New Patient Rejection",
+        "short":       "e2ep9newreject",
+        "phase_order": _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Approve"),
+    },
+    "test_e2e_p10_new_patient_partial": {
+        "label":       "P10 New Patient Partial + Rectify",
+        "short":       "e2ep10newpartial",
+        "phase_order": [
+            "Front Desk", "Phlebotomist",
+            "Accession (Reject 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
+            "Lab Technician",
+            "Doctor (Approve)", "Doctor (Rectify LFT)",
+        ],
+    },
+    "test_e2e_p13_partial_rejection": {
+        "label":       "P13 Partial Rejection",
+        "short":       "e2ep13partialreject",
+        "phase_order": [
+            "Front Desk", "Phlebotomist",
+            "Accession (Reject Serum)", "Phlebotomist (Recollect Serum)", "Accession (Re-accept Serum)",
+            "Lab Technician (Reject 24h)",
+            "Accession (Reassign 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
+            "Lab Technician (Save All)",
+            "Doctor (Approve All)",
         ],
     },
 }

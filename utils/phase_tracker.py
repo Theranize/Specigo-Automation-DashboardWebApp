@@ -73,6 +73,7 @@ NOT_EXECUTED = "NOT EXECUTED"
 #: _FLOW_SHORT is derived from FLOW_REGISTRY (single source of truth).
 #: Kept as a module-level dict for fast lookup; populated on first import.
 from utils.reporting.constants import FLOW_REGISTRY as _FLOW_REGISTRY
+from utils.failure_artifact import write_highlight_sidecar
 _FLOW_SHORT: Dict[str, str] = {k: v["short"] for k, v in _FLOW_REGISTRY.items()}
 
 #: Maps lowercase phase-name keywords to descriptive issue-type suffixes.
@@ -317,6 +318,7 @@ class PhaseTracker:
             dest.mkdir(parents=True, exist_ok=True)
             path    = dest / fname
             page.screenshot(path=str(path), full_page=True)
+            write_highlight_sidecar(page, str(path))
             return str(path)
         except Exception:
             return ""

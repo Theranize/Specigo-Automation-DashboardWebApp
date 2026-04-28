@@ -26,6 +26,8 @@ from pathlib import Path
 from typing import Dict, List
 
 from utils.reporting.constants import flow_label, flow_phase_order, patient_label
+from utils.reporting.embed import embed_image, load_highlights
+from utils.reporting.format import fmt_duration
 from utils.reporting.session import load_batch_sessions
 
 
@@ -47,9 +49,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
      color:var(--text);font-size:14px;line-height:1.6;padding-bottom:56px}
 
 /* ===== HEADER ===== */
-.hdr{background:var(--navy);color:#fff;padding:14px 32px;
+.hdr{background:var(--navy);color:#fff;height:64px;padding:0 32px;
      display:flex;align-items:center;justify-content:space-between;
-     position:sticky;top:0;z-index:300;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+     position:sticky;top:0;z-index:500;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .hdr-left h1{font-size:1.05rem;font-weight:700;letter-spacing:.02em}
 .hdr-left .sub{font-size:.77rem;color:rgba(255,255,255,.52);margin-top:2px}
 .hdr-right{display:flex;gap:24px}
@@ -213,12 +215,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 /* ===== 4-COLUMN PHASE TABLE ===== */
 .tbl-outer{overflow-x:auto}
 .phase-tbl{width:100%;border-collapse:collapse}
+/* Table column header — non-sticky.
+   Sticky thead was tried (top:64px to clear .hdr) but was unreliable:
+   .flow-card{overflow:hidden} and .tbl-outer{overflow-x:auto} both create
+   scroll/containing-block contexts, so sticky resolved against the wrong
+   ancestor and the thead drifted below the first data row at certain
+   scroll positions. Tables here are short (≤16 rows per flow), so the
+   thead being in normal flow is fine and always reads correctly.
+   Color: #1a3550 (lighter than var(--navy)=#0d2137 used by .hdr) keeps
+   thead visually distinct from the page header even on first paint. */
 .phase-tbl thead th{
-  background:var(--navy);color:rgba(255,255,255,.85);
+  background:#1a3550;color:rgba(255,255,255,.92);
   padding:10px 16px;text-align:left;font-size:.7rem;
   text-transform:uppercase;letter-spacing:.07em;
-  white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:48px}
-.phase-tbl thead th:hover{background:#1a3550}
+  white-space:nowrap;cursor:pointer;user-select:none;
+  border-top:1px solid rgba(255,255,255,.10)}
+.phase-tbl thead th:hover{background:#244568}
 .phase-tbl thead th .si{margin-left:4px;opacity:.4;font-size:.68rem}
 .phase-tbl thead th.sorted .si{opacity:1}
 .phase-tbl tbody td{
@@ -234,7 +246,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 .td-pid{font-weight:700;color:var(--blue);white-space:nowrap;min-width:60px}
 .td-flow{color:var(--text2);font-size:.81rem;max-width:220px}
 .td-phase{color:#262626;font-weight:500}
-.td-status{white-space:nowrap;min-width:120px}
+/* Status column intentionally narrow — only holds the badge + error text.
+   The screenshot lives in .td-artifact, so we redirect width budget there. */
+.td-status{white-space:nowrap;min-width:120px;max-width:240px}
+.td-artifact{min-width:280px;max-width:520px;vertical-align:middle}
+.td-artifact .td-empty{color:var(--text3)}
+.th-artifact{cursor:default !important}
+.th-artifact:hover{background:#1a3550 !important}  /* no sort hover */
 
 /* Status badges in table */
 .pbadge{display:inline-flex;align-items:center;gap:5px;
@@ -244,9 +262,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 .pb-fail{background:#fff2f0;color:#a8071a;border:1px solid #ffa39e}
 .pb-notexec{background:#fafafa;color:var(--grey);border:1px solid #d9d9d9}
 
-/* Error detail inside fail cell */
+/* Error detail inside fail cell — width matches narrower .td-status (240px) */
 .err-detail{margin-top:5px;font-size:.74rem;color:var(--dkred);
-            line-height:1.4;max-width:340px;white-space:normal;
+            line-height:1.4;max-width:220px;white-space:normal;
             word-break:break-word}
 .err-toggle{font-size:.72rem;color:var(--blue);cursor:pointer;
             text-decoration:underline dotted;display:inline-block;margin-top:2px}
@@ -257,6 +275,39 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 a.pshot{font-size:.73rem;color:var(--blue);text-decoration:none;
         display:inline-flex;align-items:center;gap:3px;margin-top:3px}
 a.pshot:hover{text-decoration:underline}
+
+/* Inline failure screenshot + highlight overlay
+   Visual language: matches existing .pshot / .pbadge tone — 1–2px borders,
+   pastel surfaces, no motion. The red overlay alone stands out against
+   the grayscale screenshot.
+   Layout: lives inside .td-artifact (its own column, max-width:520px).
+   shot-canvas is capped at 500px so it fills the artifact column without
+   forcing it past the configured max. */
+.shot-embed{margin-top:0;white-space:normal;max-width:500px}
+.shot-details{display:block;max-width:100%}
+.shot-details>summary{cursor:pointer;color:var(--blue);font-size:.73rem;
+                      display:inline-flex;align-items:center;gap:4px;
+                      list-style:none;user-select:none;margin-top:3px;
+                      white-space:nowrap}
+.shot-details>summary::-webkit-details-marker{display:none}
+.shot-details>summary:hover{text-decoration:underline}
+.shot-details>summary::before{content:"\\25B8";display:inline-block;
+                              transition:transform .15s;font-size:.65rem;
+                              color:var(--text3)}
+.shot-details[open]>summary::before{transform:rotate(90deg)}
+.shot-canvas{position:relative;display:block;max-width:500px;width:100%;
+             margin-top:6px;border:1px solid var(--border);
+             border-radius:var(--r);overflow:hidden;
+             box-shadow:var(--sh);background:#fafafa}
+.shot-canvas img{display:block;width:100%;height:auto}
+.shot-canvas .hl-box{position:absolute;border:2px solid var(--red);
+                     border-radius:2px;background:rgba(255,77,79,.06);
+                     pointer-events:auto;cursor:help;
+                     transition:background .15s,border-color .15s}
+.shot-canvas .hl-box:hover{border-color:var(--dkred);
+                           background:rgba(255,77,79,.12)}
+.shot-nocap{font-size:.73rem;color:var(--text3);font-style:italic;
+            margin-top:4px}
 
 /* No data */
 .no-phase-data{text-align:center;padding:48px;color:var(--text3);font-size:.92rem}
@@ -480,16 +531,16 @@ class PatientPhaseHtmlGenerator:
             return self._empty_html(now)
 
         # --- Batch-wide totals (shown in header) ---
+        # Reconciles each recorded entry against flow_phase_order so phases
+        # that never ran (test aborted early) are counted as NOT EXECUTED.
         b_total = b_pass = b_fail = b_notexec = 0
         for sess in batch_sessions:
-            for _tn, patient_map in sess.get("phase_data", {}).items():
-                for _pid, entries in patient_map.items():
-                    for e in entries:
-                        st = e.get("status", "NOT EXECUTED") if isinstance(e, dict) else e.status
-                        b_total += 1
-                        if st == "PASSED":   b_pass    += 1
-                        elif st == "FAILED": b_fail    += 1
-                        else:                b_notexec += 1
+            for tn, patient_map in sess.get("phase_data", {}).items():
+                p, f, n, t = self._count_phases(tn, patient_map)
+                b_pass    += p
+                b_fail    += f
+                b_notexec += n
+                b_total   += t
 
         batch_pass_rate = round(b_pass / b_total * 100, 1) if b_total else 0.0
         pr_cls = "hs-green" if batch_pass_rate >= 90 else (
@@ -596,8 +647,6 @@ class PatientPhaseHtmlGenerator:
 
 <div class="footer">
   Phase Breakdown Report &bull; {escape(now)}
-  &nbsp;&bull;&nbsp;
-  <a href="summary_report.html">&#8592; Back to Summary Report</a>
 </div>
 
 <script>
@@ -619,18 +668,16 @@ class PatientPhaseHtmlGenerator:
         tests_executed = sess.get("tests_executed", list(phase_data.keys()))
 
         # --- Session-level phase stats ---
+        # Same reconciliation as batch totals: pads NOT EXECUTED for phases
+        # that flow_phase_order expected but the run never reached.
         s_total = s_pass = s_fail = s_notexec = 0
         flow_stats: List[dict] = []
         for tn, patient_map in phase_data.items():
-            f_total = f_pass = f_fail = 0
-            for _pid, entries in patient_map.items():
-                for e in entries:
-                    st = e.get("status", "NOT EXECUTED") if isinstance(e, dict) else e.status
-                    s_total  += 1
-                    f_total  += 1
-                    if st == "PASSED":   s_pass  += 1; f_pass  += 1
-                    elif st == "FAILED": s_fail  += 1; f_fail  += 1
-                    else:                s_notexec += 1
+            f_pass, f_fail, f_notexec, f_total = self._count_phases(tn, patient_map)
+            s_pass    += f_pass
+            s_fail    += f_fail
+            s_notexec += f_notexec
+            s_total   += f_total
             flow_stats.append({
                 "test_name": tn,
                 "label":     flow_label(tn),
@@ -672,7 +719,7 @@ class PatientPhaseHtmlGenerator:
   {end_item}
   <div class="sm-item">
     <div class="sm-lbl">Duration</div>
-    <div class="sm-val">{duration}s</div>
+    <div class="sm-val">{fmt_duration(duration)}</div>
   </div>
   <div class="sm-item sm-wide">
     <div class="sm-lbl">Tests Executed</div>
@@ -781,6 +828,37 @@ class PatientPhaseHtmlGenerator:
         return sorted(seen, key=lambda p: seen[p])
 
     @staticmethod
+    def _count_phases(test_name: str, patient_map: dict) -> tuple:
+        """Return (passed, failed, notexec, total) for one test's phase data.
+
+        Reconciles recorded entries against ``flow_phase_order(test_name)``
+        (the canonical expected pipeline) so phases that never executed —
+        because the test aborted early — are counted as NOT EXECUTED rather
+        than silently absent. Falls back to phases derived from the data
+        itself when the test has no FLOW_REGISTRY entry.
+        """
+        expected = flow_phase_order(test_name) or \
+            PatientPhaseHtmlGenerator._phases_from_data(patient_map)
+        n_pass = n_fail = n_notexec = 0
+        for _pid, entries in patient_map.items():
+            recorded: Dict[str, str] = {}
+            for e in entries:
+                if isinstance(e, dict):
+                    name = e.get("phase_name") or ""
+                    st   = e.get("status", "NOT EXECUTED")
+                else:
+                    name = e.phase_name
+                    st   = e.status
+                if name:
+                    recorded[name] = st
+            for phase in expected:
+                st = recorded.get(phase, "NOT EXECUTED")
+                if   st == "PASSED": n_pass    += 1
+                elif st == "FAILED": n_fail    += 1
+                else:                n_notexec += 1
+        return n_pass, n_fail, n_notexec, (n_pass + n_fail + n_notexec)
+
+    @staticmethod
     def _empty_html(now: str) -> str:
         return (
             f'<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
@@ -823,13 +901,20 @@ class PatientPhaseHtmlGenerator:
         """Render one flow card with pipeline stepper + 4-column phase table."""
         label = flow_label(test_name)
 
-        f_pass = f_fail = f_notexec = 0
-        for pid in patients:
-            for e in patient_map.get(pid, []):
-                if e.status == "PASSED":   f_pass    += 1
-                elif e.status == "FAILED": f_fail    += 1
-                else:                      f_notexec += 1
-        f_total = f_pass + f_fail + f_notexec
+        # Convert wrapped/dataclass entries back to a uniform dict for
+        # _count_phases, which is the single source of truth for the
+        # passed/failed/not-executed reconciliation against flow_phase_order.
+        plain_map = {
+            pid: [
+                e if isinstance(e, dict) else {
+                    "phase_name": getattr(e, "phase_name", ""),
+                    "status":     getattr(e, "status",     "NOT EXECUTED"),
+                }
+                for e in patient_map.get(pid, [])
+            ]
+            for pid in patients
+        }
+        f_pass, f_fail, f_notexec, f_total = self._count_phases(test_name, plain_map)
 
         if f_fail == 0 and f_pass > 0:
             badge_cls, badge_txt = "fb-all-pass", "&#10003; All Phases Passed"
@@ -871,7 +956,7 @@ class PatientPhaseHtmlGenerator:
     {pipeline}
   </div>
 
-  <!-- 4-column table -->
+  <!-- 5-column table (Patient | Flow | Section | Status | Artifact) -->
   <div class="tbl-outer">
     <table class="phase-tbl" id="{tbl_id}">
       <thead>
@@ -880,6 +965,7 @@ class PatientPhaseHtmlGenerator:
           <th onclick="sortPhaseCol('{tbl_id}',1)">Executed Flow<span class="si">&#8597;</span></th>
           <th onclick="sortPhaseCol('{tbl_id}',2)">Executed Section<span class="si">&#8597;</span></th>
           <th onclick="sortPhaseCol('{tbl_id}',3)">Status<span class="si">&#8597;</span></th>
+          <th class="th-artifact">Artifact</th>
         </tr>
       </thead>
       <tbody>
@@ -937,6 +1023,63 @@ class PatientPhaseHtmlGenerator:
                 nodes.append('<div class="p-arrow">&rarr;</div>')
         return f'<div class="pipeline">{"".join(nodes)}</div>'
 
+    # -------------------------------------------------- failure-screenshot embed
+
+    @staticmethod
+    def _render_failure_shot(shot_path: str) -> str:
+        """Render the inline failure screenshot block for one FAILED phase row.
+
+        Returns a ``<details>``-wrapped, base64-embedded ``<img>`` with one
+        absolutely-positioned ``.hl-box`` overlay per highlight from the
+        sidecar JSON. Successive fallbacks:
+
+        * No shot_path or unreadable PNG  → terse "no screenshot" note.
+        * Sidecar missing / no highlights → embedded image, no overlay.
+        * Sidecar has highlights          → image + red boxes, hover for text.
+        """
+        if not shot_path:
+            return ""
+
+        data_url = embed_image(shot_path)
+        if not data_url:
+            return '<div class="shot-nocap">&#128247; Screenshot unavailable</div>'
+
+        meta = load_highlights(shot_path)
+        page_w = meta["page_size"]["width"]
+        page_h = meta["page_size"]["height"]
+        highlights = meta["highlights"]
+
+        # Build overlay rectangles in % so they scale with the responsive image.
+        boxes: List[str] = []
+        if page_w > 0 and page_h > 0:
+            for h in highlights:
+                if h["width"] <= 0 or h["height"] <= 0:
+                    continue
+                left   = max(0.0, min(100.0, h["x"] / page_w * 100.0))
+                top    = max(0.0, min(100.0, h["y"] / page_h * 100.0))
+                width  = max(0.0, min(100.0 - left, h["width"]  / page_w * 100.0))
+                height = max(0.0, min(100.0 - top,  h["height"] / page_h * 100.0))
+                tip = escape(h["text"][:240]) if h["text"] else "Failure region"
+                boxes.append(
+                    f'<div class="hl-box" '
+                    f'style="left:{left:.2f}%;top:{top:.2f}%;'
+                    f'width:{width:.2f}%;height:{height:.2f}%" '
+                    f'title="{tip}"></div>'
+                )
+
+        overlay_html = "".join(boxes)
+        return (
+            '<div class="shot-embed">'
+            '<details class="shot-details">'
+            '<summary>&#128247; Screenshot</summary>'
+            '<div class="shot-canvas">'
+            f'<img src="{data_url}" alt="Failure screenshot" loading="lazy">'
+            f'{overlay_html}'
+            '</div>'
+            '</details>'
+            '</div>'
+        )
+
     # ---------------------------------------------------------------- table
 
     def _phase_table(
@@ -956,19 +1099,24 @@ class PatientPhaseHtmlGenerator:
                 error_str = "" if entry is None else (entry.error or "")
                 shot_path = "" if entry is None else (entry.screenshot_path or "")
 
+                # Status column: badge + (for FAILED) error text only.
+                # Artifact column: the screenshot link / embed lives here in
+                # its own column, separated from any error text.
+                artifact_inner = '<span class="td-empty">&mdash;</span>'
+
                 if status == "PASSED":
-                    row_cls  = "tr-pass"
-                    shot_link = ""
-                    if shot_path:
-                        rel = Path(shot_path).as_posix()
-                        shot_link = (
-                            f' <a class="pshot" href="../{rel}" target="_blank"'
-                            f' title="View success screenshot">&#128247;</a>'
-                        )
+                    row_cls = "tr-pass"
                     status_inner = (
                         f'<span class="pbadge pb-pass" data-ps="{escape(status)}">'
-                        f'&#10003; Passed</span>{shot_link}'
+                        f'&#10003; Passed</span>'
                     )
+                    if shot_path:
+                        rel = Path(shot_path).as_posix()
+                        artifact_inner = (
+                            f'<a class="pshot" href="../{rel}" target="_blank"'
+                            f' title="View success screenshot">'
+                            f'&#128247; <span class="pshot-lbl">View</span></a>'
+                        )
 
                 elif status == "FAILED":
                     row_cls   = "tr-fail"
@@ -980,17 +1128,13 @@ class PatientPhaseHtmlGenerator:
                         f'<div class="err-full-text">{err_full}</div>'
                         f'</div>'
                     ) if error_str else ""
-                    shot_html = ""
-                    if shot_path:
-                        rel = Path(shot_path).as_posix()
-                        shot_html = (
-                            f'<a class="pshot" href="../{rel}" target="_blank">'
-                            f'&#128247; Screenshot</a>'
-                        )
                     status_inner = (
                         f'<span class="pbadge pb-fail" data-ps="{escape(status)}">&#10007; Failed</span>'
-                        f'{err_html}{shot_html}'
+                        f'{err_html}'
                     )
+                    shot_html = self._render_failure_shot(shot_path)
+                    if shot_html:
+                        artifact_inner = shot_html
 
                 else:  # NOT EXECUTED
                     row_cls      = "tr-notexec"
@@ -1007,11 +1151,12 @@ class PatientPhaseHtmlGenerator:
                     f'<td class="td-flow">{escape(flow_lbl)}</td>'
                     f'<td class="td-phase">{escape(phase)}</td>'
                     f'<td class="td-status">{status_inner}</td>'
+                    f'<td class="td-artifact">{artifact_inner}</td>'
                     f'</tr>'
                 )
 
         if not rows:
-            return f'<tr><td colspan="4" class="no-phase-data">No phase data for this flow.</td></tr>'
+            return f'<tr><td colspan="5" class="no-phase-data">No phase data for this flow.</td></tr>'
         return "\n".join(rows)
 
     # ---------------------------------------------------------------- svg donut
