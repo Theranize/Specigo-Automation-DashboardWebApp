@@ -1,6 +1,7 @@
 """Doctor Report Review flow orchestrator."""
 
 from typing import Any, Dict, List
+from flows._guard import check_ui_error
 from pages.doctor.doctor_page import DoctorPage
 from state import runtime_state
 from utils.date_utils import resolve_filters
@@ -33,10 +34,17 @@ def execute_doctor_flow(
         return result
 
     dp.click_report_entry_menu()
+
+    if check_ui_error(page, result, "post-menu"):
+        return result
+
     dp.apply_date_filters(filters["from_date"], filters["to_date"])
     dp.fill_search_name(patient_name)
     dp.fill_search_mobile(patient_mobile)
     dp.click_apply_filter()
+
+    if check_ui_error(page, result, "post-search"):
+        return result
 
     if not dp.wait_for_patient_rows():
         result["error_found"] = True
@@ -59,6 +67,9 @@ def execute_doctor_flow(
             result["error_found"] = True
             result["error_message"] = sub_result["error_message"]
             return result
+
+    if check_ui_error(page, result, "end-of-flow"):
+        return result
 
     result["completed"] = True
     return result

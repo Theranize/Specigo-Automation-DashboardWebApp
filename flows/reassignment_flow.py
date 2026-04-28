@@ -1,6 +1,7 @@
 """Re-Assignment Log flow orchestrator."""
 
 from typing import Any, Dict
+from flows._guard import check_ui_error
 from pages.accession.reassignment_page import ReassignmentPage
 from state import runtime_state
 
@@ -26,6 +27,9 @@ def execute_reassignment_flow(
     rp.navigate_to_reassignment_log()
     rp.fill_search_filters(patient_name, mobile_number)
     rp.click_search()
+
+    if check_ui_error(page, result, "post-search"):
+        return result
 
     if not rp.wait_for_rows():
         result["error_found"] = True
@@ -59,8 +63,14 @@ def execute_reassignment_flow(
             result["action_results"].append(entry)
             return result
 
+        if check_ui_error(page, result, "post-assign"):
+            return result
+
         entry["result"] = "assigned"
         result["action_results"].append(entry)
+
+    if check_ui_error(page, result, "end-of-flow"):
+        return result
 
     result["completed"] = True
     return result

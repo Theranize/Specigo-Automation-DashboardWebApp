@@ -65,12 +65,20 @@ class FrontDeskPage(BasePage):
             self.wait_for_idle(2)
 
     def click_next(self) -> None:
-        """Scroll page down and click the Next button via JS dispatch."""
+        """Scroll page down and click the Next button via JS dispatch.
+
+        Waits a short interval after the click so AntD has time to render any
+        per-field validation errors (the 'has-error' state gets applied on
+        the next React tick — without this wait, a same-frame call to
+        ``detect_error()`` from the flow returns None and the validation is
+        silently bypassed).
+        """
         self.scroll_down(800)
         next_btn = self.page.get_by_role("button", name=NEXT_BUTTON_NAME)
         next_btn.scroll_into_view_if_needed()
         self.wait_for_idle(1)
         next_btn.evaluate("el => el.click()")
+        self.wait_for_idle(0.5)
         self.wait_for_idle(3)
 
     def click_submit(self) -> None:
@@ -122,15 +130,18 @@ class FrontDeskPage(BasePage):
         self.wait_for_idle(2)
 
     def detect_error(self) -> Optional[str]:
-        """Check for any known error toast/message on the page; returns text or None."""
-        for pattern in ["patient limit has been reached", "already registered", "found with the given mobile number"]:
-            el = self.page.get_by_text(pattern, exact=False)
-            try:
-                if el.count() > 0 and el.first.is_visible():
-                    return el.first.inner_text().strip()
-            except Exception:
-                pass
-        return None
+        """Return visible AntD error text on the page, else None.
+
+        Delegates to ``utils.error_detector.detect_ui_errors`` so we get the
+        full 14-selector AntD/ARIA coverage (message bar, notification,
+        modal, form validation, alert, role=alert, generic CSS patterns)
+        instead of the previous 3-string substring match. The return shape
+        (``str`` or ``None``) is preserved so existing call sites in
+        ``flows/front_desk_flow.py`` continue working unchanged.
+        """
+        from utils.error_detector import detect_ui_errors
+        err = detect_ui_errors(self.page)
+        return err.text if err else None
 
     def select_salutation(self, value: str) -> None:
         """Open salutation dropdown via label-based XPath (avoids shifting AntD rc_select IDs)."""

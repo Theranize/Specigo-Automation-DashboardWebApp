@@ -1,6 +1,7 @@
 """Accession Sample Verification flow orchestrator."""
 
 from typing import Any, Dict, List, Optional
+from flows._guard import check_ui_error
 from pages.accession.accession_page import AccessionPage
 from state import runtime_state
 from utils.date_utils import resolve_filters
@@ -28,6 +29,9 @@ def execute_accession_flow(
 
     ap.navigate_to_sample_verification()
 
+    if check_ui_error(page, result, "post-navigate"):
+        return result
+
     if not ap.wait_for_table_rows():
         result["error_found"] = True
         result["error_message"] = "Table rows not visible after navigation"
@@ -38,6 +42,9 @@ def execute_accession_flow(
     ap.fill_search_mobile(patient_mobile)
     ap.click_search()
 
+    if check_ui_error(page, result, "post-search"):
+        return result
+
     for rule in sample_rules:
         action_entry = _process_sample_rule(ap, rule, samples)
         result["action_results"].append(action_entry)
@@ -46,6 +53,9 @@ def execute_accession_flow(
             result["error_found"] = True
             result["error_message"] = action_entry["error"]
             return result
+
+    if check_ui_error(page, result, "end-of-flow"):
+        return result
 
     result["completed"] = True
     return result

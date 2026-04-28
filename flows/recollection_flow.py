@@ -1,6 +1,7 @@
 """Phlebotomist Re-Collection flow orchestrator."""
 
 from typing import Any, Dict
+from flows._guard import check_ui_error
 from pages.phlebotomist.recollection_page import RecollectionPage
 from state import runtime_state
 from utils.date_utils import resolve_filters
@@ -38,6 +39,9 @@ def execute_recollection_flow(
     rp.fill_search_mobile(mobile_number)
     rp.click_search()
 
+    if check_ui_error(page, result, "post-search"):
+        return result
+
     if not rp.wait_for_rows():
         result["error_found"] = True
         result["error_message"] = (
@@ -71,6 +75,10 @@ def execute_recollection_flow(
         toggle_result = rp.toggle_sample(block, rule["action"])
         entry["result"] = toggle_result
 
+        if check_ui_error(page, result, "post-toggle"):
+            result["toggle_results"].append(entry)
+            return result
+
         # Store new sample ID so accession can re-accept by ID
         if toggle_result in ("toggled_on", "already_on"):
             new_id = rp.get_block_sample_id(block)
@@ -80,6 +88,9 @@ def execute_recollection_flow(
                 entry["new_sample_id"] = new_id
 
         result["toggle_results"].append(entry)
+
+    if check_ui_error(page, result, "end-of-flow"):
+        return result
 
     result["completed"] = True
     return result

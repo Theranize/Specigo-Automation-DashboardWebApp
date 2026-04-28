@@ -14,7 +14,7 @@
       "expected_error": { "should_appear": false, "message": "" },
       "patient": {
         "salutation": "Master",
-        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
+        "first_name": "op", "middle_name": "Kumar", "last_name": "Mishra",
         "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
         "mobile_number": "7777777777", "email": "",
         "address": { "pincode": "", "address_line": "" }
@@ -170,7 +170,7 @@
       "expected_error": { "should_appear": false, "message": "" },
       "patient": {
         "salutation": "Mrs",
-        "first_name": "Priya", "middle_name": "", "last_name": "Sharma",
+        "first_name": "777", "middle_name": "", "last_name": "Sharma",
         "gender": "", "risk_level": "Normal", "age": 28, "date_of_birth": "",
         "mobile_number": "8900000021", "email": "",
         "address": { "pincode": "", "address_line": "" }

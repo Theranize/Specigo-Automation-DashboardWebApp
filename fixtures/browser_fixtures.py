@@ -1,5 +1,7 @@
 """Browser and page fixtures with full-screen (maximized) Chromium context."""
 
+import time
+
 import pytest
 from playwright.sync_api import sync_playwright
 from utils.file_utils import load_yaml
@@ -7,6 +9,10 @@ from utils.reporting import VIDEOS_DIR
 
 CONFIG_PATH = "config/test_config.yaml"
 URLS_PATH   = "config/urls.yaml"
+
+# Hold the browser open this long after the last test finishes so the human
+# operator can glance at the final screen state before the window vanishes.
+SESSION_END_HOLD_SECONDS = 3.0
 
 
 @pytest.fixture(scope="session")
@@ -31,6 +37,10 @@ def browser_instance(pytestconfig):
         context.set_default_timeout(config.get("timeout", 30000))
         context.base_url = base_url
         yield {"browser": browser, "context": context, "base_url": base_url}
+        # Linger briefly on the final state — applies regardless of pass/fail
+        # outcome — so the operator can see what the last action produced
+        # before the browser tears down.
+        time.sleep(SESSION_END_HOLD_SECONDS)
         browser.close()
 
 

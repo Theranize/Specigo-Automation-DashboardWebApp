@@ -116,7 +116,11 @@ FLOW_REGISTRY: Dict[str, Dict] = {
         "short":       "e2ep8newaccept",
         "phase_order": _STD_ACCEPTANCE,
     },
-    "test_e2e_p10_duplicate_mobile_error": {
+    # NOTE: file name is `test_e2e_p10_duplicate_mobile_error.py` but the
+    # `_TEST` constant inside the file (which phase_tracker keys by) is
+    # `test_e2e_p11_duplicate_mobile_error`. The registry key MUST match
+    # `_TEST` so flow_phase_order() resolves correctly in the phase report.
+    "test_e2e_p11_duplicate_mobile_error": {
         "label":       "P11 Duplicate Mobile",
         "short":       "e2ep11dupmobile",
         "phase_order": ["Front Desk"],
