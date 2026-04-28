@@ -23,6 +23,61 @@ from utils.reporting.session import _load_run_history
 
 
 # =============================================================================
+# RUN-HISTORY PAGINATION
+# =============================================================================
+#: Maximum runs shown per History sub-tab. When the project crosses this
+#: threshold, a new tab is added to the Run History panel; the most recent
+#: page is always labelled "Latest" and is the default-active tab.
+RUN_HISTORY_PAGE_SIZE = 50
+
+
+def _paginate_runs(runs: List[dict], page_size: int = RUN_HISTORY_PAGE_SIZE) -> List[List[dict]]:
+    """Split a chronological run list into pages of *page_size*, latest first.
+
+    ``runs`` is the oldest→newest list returned by ``_load_run_history()``.
+    Returns ``[[latest 50], [previous 50], [previous 50], ...]`` — each
+    inner page preserves chronological (oldest→newest) order so the trend
+    chart's x-axis still reads left-to-right by time.
+    """
+    if not runs:
+        return []
+    pages: List[List[dict]] = []
+    end = len(runs)
+    while end > 0:
+        start = max(0, end - page_size)
+        pages.append(runs[start:end])
+        end = start
+    return pages
+
+
+# Shared <thead> for every per-page run-history table.
+_HIST_THEAD = (
+    '<thead><tr>'
+    '<th>#</th><th>Run ID</th><th>Date</th>'
+    '<th>Total</th><th>Passed</th><th>Failed</th>'
+    '<th>Pass %</th><th>Duration</th><th>Open</th>'
+    '</tr></thead>'
+)
+
+
+def _page_meta(page_idx: int, page_runs: List[dict]) -> dict:
+    """Return ``{title, range, count}`` for one paginated history page.
+
+    ``title`` is ``"Latest"`` for page 0, ``"Page N"`` (1-based) for older
+    pages. ``range`` is the inclusive session-number span (``"38-87"``) or
+    a positional fallback when ``session_num`` was never registered.
+    """
+    nums = [int(r.get("session_num") or 0) for r in page_runs]
+    valid = [n for n in nums if n > 0]
+    if valid:
+        rng = f"{min(valid)}-{max(valid)}"
+    else:
+        rng = f"1-{len(page_runs)}"
+    title = "Latest" if page_idx == 0 else f"Page {page_idx + 1}"
+    return {"title": title, "range": rng, "count": len(page_runs)}
+
+
+# =============================================================================
 # EMBEDDED CSS
 # =============================================================================
 _CSS = """
@@ -174,6 +229,21 @@ a.shot-link::before{content:'\\1F4F8';font-size:.75rem}
 .hcard .hnum{font-size:1.7rem;font-weight:800;line-height:1.1}
 .hcard .hlbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
 .hcard .hsub{font-size:.78rem;color:var(--text2);margin-top:2px}
+/* ===== HISTORY PER-PAGE TABS (50 runs per page) ===== */
+.hist-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);
+           margin:18px 0 14px;flex-wrap:wrap}
+.hist-tab{display:inline-flex;align-items:center;gap:6px;
+          padding:8px 18px;border:none;background:transparent;cursor:pointer;
+          font-size:.81rem;color:var(--text2);font-family:inherit;font-weight:500;
+          border-bottom:2px solid transparent;margin-bottom:-1px;
+          transition:color .15s,border-color .15s}
+.hist-tab:hover{color:var(--blue)}
+.hist-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700}
+.hist-tab-rng{font-size:.7rem;color:var(--text3);font-weight:500}
+.hist-tab.active .hist-tab-rng{color:var(--blue)}
+.hist-page-panel{display:none}
+.hist-page-panel.active{display:block}
+.hist-table-wrap{margin-top:12px}
 .run-id-cell{font-family:'Consolas','Courier New',monospace;font-size:.8rem;color:#262626}
 .open-btn{padding:4px 12px;background:var(--blue);color:#fff;border:none;
           border-radius:12px;cursor:pointer;font-size:.75rem;font-family:inherit;
@@ -399,12 +469,29 @@ class HtmlReportGenerator:
             if not results else ""
         )
 
+        # Paginate the history into 50-run pages, latest-first.
+        # Each page renders its own tab, line-chart canvas, and table.
+        hist_pages         = _paginate_runs(runs)
+        hist_pages_payload = [
+            [
+                {
+                    "session_num":    r.get("session_num", 0),
+                    "run_id":         r.get("run_id", ""),
+                    "summary":        r.get("summary", {}),
+                    "tests_executed": r.get("tests_executed", []),
+                }
+                for r in page
+            ]
+            for page in hist_pages
+        ]
+
         js_vars = (
             f"var _DPASSED = {passed};\n"
             f"var _DFAILED = {failed};\n"
             f"var _DERRORS = {errors};\n"
             f"var _DSKIPPED = {skipped};\n"
             f"var _RUN_HISTORY = {json.dumps(runs)};\n"
+            f"var _HIST_PAGES = {json.dumps(hist_pages_payload)};\n"
         )
 
         _session_nums = sorted({r.get("session_num", 0) for r in runs if r.get("session_num", 0)})
@@ -419,7 +506,7 @@ class HtmlReportGenerator:
             sess_filter_html = ""
 
         hist_cards_html = self._run_hist_cards(runs)
-        hist_table_html = self._run_hist_table(runs, run_id)
+        hist_tabs_html, hist_panels_html = self._render_hist_pages(hist_pages, run_id)
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -594,17 +681,7 @@ class HtmlReportGenerator:
 
     {hist_cards_html}
 
-    <!-- Trend chart in history panel -->
-    <div class="charts-row" style="grid-template-columns:1fr">
-      <div class="chart-card">
-        <div class="chart-title">Pass Rate Trend &mdash; All Sessions</div>
-        <div class="chart-wrap" style="min-height:180px">
-          <canvas id="trendChartHist"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- History toolbar -->
+    <!-- History toolbar (filter buttons + search apply across the active page) -->
     <div class="toolbar" style="margin-bottom:14px">
       {sess_filter_html}
       <input class="search-box" type="text"
@@ -612,27 +689,11 @@ class HtmlReportGenerator:
              oninput="onHistSearch(this.value)">
     </div>
 
-    <!-- Run history table -->
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Run ID</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Passed</th>
-            <th>Failed</th>
-            <th>Pass %</th>
-            <th>Duration</th>
-            <th>Open</th>
-          </tr>
-        </thead>
-        <tbody id="rhtbody">
-          {hist_table_html}
-        </tbody>
-      </table>
-    </div>
+    <!-- Per-page tab strip (50 runs per page, latest first) -->
+    {hist_tabs_html}
+
+    <!-- One panel per page: chart + table for that page's 50 runs -->
+    {hist_panels_html}
 
   </div><!-- #mpanel-history -->
 
@@ -645,44 +706,89 @@ class HtmlReportGenerator:
 <script>
 {js_vars}
 {_JS}
-/* Second trend chart for history panel */
-document.addEventListener('DOMContentLoaded', function() {{
-  var el2 = document.getElementById('trendChartHist');
-  if (el2 && window.Chart && _RUN_HISTORY.length > 0) {{
-    var labels = _RUN_HISTORY.map(function(r) {{
-      return r.session_num ? 'Session ' + r.session_num : (r.run_id || '').replace('run_','').replace(/_/g,' ');
-    }});
-    var rates = _RUN_HISTORY.map(function(r) {{ return r.summary ? r.summary.pass_rate : 0; }});
-    var colors = rates.map(function(v) {{
-      return v >= 90 ? '#52c41a' : (v >= 70 ? '#fa8c16' : '#ff4d4f');
-    }});
-    new Chart(el2.getContext('2d'), {{
-      type: 'bar',
-      data: {{
-        labels: labels,
-        datasets: [{{ label: 'Pass Rate %', data: rates,
-          backgroundColor: colors, borderRadius: 4, borderSkipped: false }}]
+
+/* ----------------------------------------------------------------
+   Run History per-page line charts.
+   _HIST_PAGES = [[run, run, ...], ...]  \u2014 page 0 is "Latest".
+   Charts are initialized lazily on first show because Chart.js renders
+   to 0x0 when the canvas is display:none. Page 0 is initialized on
+   DOMContentLoaded since it's the default-active panel.
+   ---------------------------------------------------------------- */
+var _histCharts = {{}};
+
+function _initHistChart(idx) {{
+  if (_histCharts[idx]) return;
+  var canvas = document.getElementById('trendChartHist' + idx);
+  if (!canvas || !window.Chart) return;
+  var page = (window._HIST_PAGES && _HIST_PAGES[idx]) || [];
+  if (page.length === 0) return;
+
+  var labels = page.map(function(r) {{
+    return r.session_num ? 'S' + r.session_num
+                         : (r.run_id || '').replace('run_','').replace(/_/g,' ');
+  }});
+  var rates = page.map(function(r) {{
+    return r.summary ? (r.summary.pass_rate || 0) : 0;
+  }});
+  var pointColors = rates.map(function(v) {{
+    return v >= 90 ? '#52c41a' : (v >= 70 ? '#fa8c16' : '#ff4d4f');
+  }});
+
+  _histCharts[idx] = new Chart(canvas.getContext('2d'), {{
+    type: 'line',
+    data: {{
+      labels: labels,
+      datasets: [{{
+        label: 'Pass Rate %',
+        data: rates,
+        borderColor: '#1677ff',
+        backgroundColor: 'rgba(22,119,255,.10)',
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        tension: 0.25,
+        fill: true,
+      }}]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {{
+        y: {{ min: 0, max: 100, ticks: {{ callback: function(v) {{ return v + '%'; }} }} }},
+        x: {{ ticks: {{ font: {{ size: 10 }}, maxRotation: 0, autoSkipPadding: 12 }} }}
       }},
-      options: {{
-        scales: {{
-          y: {{ min: 0, max: 100, ticks: {{ callback: function(v) {{ return v + '%'; }} }} }},
-          x: {{ ticks: {{ font: {{ size: 10 }} }} }}
-        }},
-        plugins: {{
-          legend: {{ display: false }},
-          tooltip: {{ callbacks: {{
-            title: function(items) {{
-              var r = _RUN_HISTORY[items[0].dataIndex];
-              var tests = (r.tests_executed || []).join(', ') || '(none)';
-              return (r.session_num ? 'Session ' + r.session_num : items[0].label) + ' \u2014 ' + tests;
-            }},
-            label: function(c) {{ return c.raw + '%'; }}
-          }} }}
-        }}
+      plugins: {{
+        legend: {{ display: false }},
+        tooltip: {{ callbacks: {{
+          title: function(items) {{
+            var r = page[items[0].dataIndex];
+            var tests = (r.tests_executed || []).join(', ') || '(none)';
+            return (r.session_num ? 'Session ' + r.session_num : items[0].label) + ' \u2014 ' + tests;
+          }},
+          label: function(c) {{ return c.raw + '%'; }}
+        }} }}
       }}
-    }});
-  }}
+    }}
+  }});
+}}
+
+function showHistPage(idx) {{
+  document.querySelectorAll('.hist-tab').forEach(function(b) {{
+    b.classList.toggle('active', b.getAttribute('data-hp') === String(idx));
+  }});
+  document.querySelectorAll('.hist-page-panel').forEach(function(p) {{
+    p.classList.toggle('active', p.id === 'hist-page-' + idx);
+  }});
+  _initHistChart(idx);
+}}
+
+document.addEventListener('DOMContentLoaded', function() {{
+  // Page 0 (Latest) is the default-active panel \u2014 initialize its chart now.
+  _initHistChart(0);
 }});
+
 /* Fix duplicate tab IDs by wiring header nav buttons manually */
 document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
   btn.addEventListener('click', function() {{
@@ -782,6 +888,66 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
     <div class="hsub">Across all runs</div>
   </div>
 </div>"""
+
+    def _render_hist_pages(self, pages: List[List[dict]], current_run_id: str) -> tuple:
+        """Build the per-page tab strip and corresponding panels.
+
+        Returns ``(tabs_html, panels_html)``. When there's only one page the
+        tab strip renders a single tab — kept for layout consistency, hidden
+        via CSS when degenerate (still renders the panel).
+
+        Each panel contains a chart-card (line chart, lazy-init) + the
+        existing per-page run-history table.
+        """
+        if not pages:
+            # No history yet — render a single empty panel with the
+            # existing 'no rows' table message; no tab strip.
+            empty_tbl = self._run_hist_table([], current_run_id)
+            panels = (
+                '<div id="hist-page-0" class="hist-page-panel active">'
+                f'<div class="tbl-wrap"><table>{_HIST_THEAD}<tbody>{empty_tbl}</tbody></table></div>'
+                '</div>'
+            )
+            return "", panels
+
+        tab_buttons: List[str] = []
+        panel_blocks: List[str] = []
+        for idx, page in enumerate(pages):
+            meta       = _page_meta(idx, page)
+            active_cls = "active" if idx == 0 else ""
+            tab_buttons.append(
+                f'<button class="hist-tab {active_cls}" data-hp="{idx}" '
+                f'onclick="showHistPage({idx})">'
+                f'{escape(meta["title"])}'
+                f'<span class="hist-tab-rng">({escape(meta["range"])})</span>'
+                f'</button>'
+            )
+            chart_title  = f'Pass Rate Trend &mdash; Sessions {escape(meta["range"])}'
+            tbl_rows     = self._run_hist_table(page, current_run_id)
+            panel_blocks.append(
+                f'<div id="hist-page-{idx}" class="hist-page-panel {active_cls}">'
+                  f'<div class="charts-row" style="grid-template-columns:1fr">'
+                    f'<div class="chart-card">'
+                      f'<div class="chart-title">{chart_title}</div>'
+                      f'<div class="chart-wrap" style="min-height:200px">'
+                        f'<canvas id="trendChartHist{idx}"></canvas>'
+                      f'</div>'
+                    f'</div>'
+                  f'</div>'
+                  f'<div class="hist-table-wrap">'
+                    f'<div class="tbl-wrap"><table>{_HIST_THEAD}'
+                    f'<tbody class="rhtbody-page" data-hp="{idx}">{tbl_rows}</tbody>'
+                    f'</table></div>'
+                  f'</div>'
+                f'</div>'
+            )
+
+        # Hide the tab strip when there's only one page — it's noise.
+        tabs_html = (
+            f'<div class="hist-tabs" role="tablist">{"".join(tab_buttons)}</div>'
+            if len(pages) > 1 else ""
+        )
+        return tabs_html, "".join(panel_blocks)
 
     def _run_hist_table(self, runs: List[dict], current_run_id: str) -> str:
         """Render run history table rows with expandable detail sub-rows."""
