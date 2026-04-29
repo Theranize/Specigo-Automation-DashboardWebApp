@@ -80,59 +80,144 @@ Tests  →  Flows  →  Pages (inherit BasePage)  →  Locators  →  Playwright
 
 ## 2. Quick Start
 
-Use `run.bat` from the project root. It wraps `.\Test\Scripts\pytest.exe` with `-v --tb=short` automatically.
+Two batch files at the project root drive every test run. Both wrap
+`.\Test\Scripts\pytest.exe` with `-v --tb=short` automatically — never call
+the system `pytest`.
+
+- `run.bat` — suite, patient, and pass-through runs (with optional parallel workers)
+- `run_regression.bat` — per-role regression runs
+
+---
+
+### `run.bat` — suites, patients, and pass-through
+
+**Syntax:** `run <suite> [env] [N|auto]`
+
+| Argument | Values | Default |
+|---|---|---|
+| `<suite>` | `e2e`, `acceptance`, `rejection`, `rectification`, `regression`, `smoke`, `all`, `patient`, or any pytest target/flag | required |
+| `[env]` | `dev`, `staging` | `dev` (`https://frontenddevh1.specigo.com/`) |
+| `[N\|auto]` | Integer worker count, or `auto` (= one per logical CPU core) | sequential |
+
+When the third argument is set, `run.bat` appends `-n <N> --dist worksteal`
+to pytest. Per-worker results are merged in `conftest.py` so you still get
+one combined `reports/summary_report.html` and a single
+`reports/runs/Run_Sp_NNNNNNNNNN.json` snapshot per invocation.
+
+**Suite commands (sequential):**
 
 ```batch
-run e2e                  # All E2E tests
-run acceptance           # E2E acceptance (happy path)
-run rejection            # E2E rejection / recollection flows
-run rectification        # E2E rectification flows
-run regression           # All regression tests
-run smoke                # Smoke tests
-run all                  # Entire test suite
+run e2e                          :: all E2E tests, dev
+run acceptance                   :: E2E acceptance (happy path)
+run rejection                    :: E2E rejection / recollection flows
+run rectification                :: E2E rectification flows
+run regression                   :: all regression tests
+run smoke                        :: smoke tests
+run all                          :: entire test suite
 ```
 
-**Run specific patients by ID:**
+**Suite commands with explicit env:**
 
 ```batch
-run patient P1               # Single patient
-run patient P1 P3 P5         # Multiple patients
-run patient P1 staging       # Single patient on staging env
-run patient P1 P3 staging    # Multiple patients on staging
+run acceptance staging           :: acceptance on staging
+run regression dev               :: regression on dev (explicit)
 ```
 
-**Optional environment argument (default = dev):**
+**Suite commands with parallel workers (env required first):**
 
 ```batch
-run acceptance               # dev  (https://frontenddevh1.specigo.com/)
-run acceptance staging       # staging (https://staging.specigo.com/)
+run acceptance dev 3             :: 3 workers, dev
+run acceptance staging 3         :: 3 workers, staging
+run e2e dev 4                    :: 4 workers, all e2e on dev
+run regression dev 3             :: 3 workers, regression on dev
+run acceptance dev auto          :: one worker per CPU core
+run e2e staging auto             :: auto workers on staging
 ```
 
-**Run a specific file or pass custom args:**
+**Patient mode** — run specific patient IDs (`P1`–`P14`):
+
+```batch
+run patient P1                   :: single patient on dev
+run patient P1 P3 P5             :: multiple patients on dev
+run patient P1 P3 staging        :: P1 + P3 on staging
+run patient P1 P3 P5 3           :: 3 workers, those patients on dev
+run patient P1 P3 P5 3 staging   :: 3 workers, those patients on staging
+run patient P1 P3 P5 P7 P9 5     :: 5 workers, five odd patients
+run patient P1 P3 P5 auto        :: auto workers on those patients
+```
+
+In patient mode, IDs come first; the worker count (numeric or `auto`) and
+env (`dev`/`staging`) can follow in either order, but env always
+terminates parsing.
+
+**Pass-through** — any other argument goes straight to pytest:
 
 ```batch
 run tests/e2e/acceptance/test_e2e_p5_relative_acceptance.py
+run tests/e2e/acceptance/test_e2e_p5_relative_acceptance.py --env staging
 run -m doctor -v
+run -k "p3 and not rejection"
 ```
 
-**Run regression by role (`run_regression.bat`):**
+---
+
+### `run_regression.bat` — per-role regression
+
+**Syntax:** `run_regression <role> [env]`
+
+| Role | Alias | Test file |
+|---|---|---|
+| `frontdesk` | `fd` | `tests/regression/test_front_desk_regression.py` |
+| `phlebotomist` | `phlebo` | `tests/regression/test_phlebotomist_regression.py` |
+| `accession` | — | `tests/regression/test_accession_regression.py` |
+| `labtech` | `lt` | `tests/regression/test_labtech_regression.py` |
+| `doctor` | — | `tests/regression/test_doctor_regression.py` |
 
 ```batch
-run_regression frontdesk     # alias: fd
-run_regression phlebotomist  # alias: phlebo
-run_regression accession
-run_regression labtech       # alias: lt
-run_regression doctor
-run_regression doctor staging
+run_regression frontdesk         :: front-desk regression on dev
+run_regression fd                :: alias of frontdesk
+run_regression phlebotomist      :: phlebotomist regression on dev
+run_regression phlebo            :: alias of phlebotomist
+run_regression accession         :: accession regression on dev
+run_regression labtech           :: labtech regression on dev
+run_regression lt                :: alias of labtech
+run_regression doctor            :: doctor regression on dev
+run_regression doctor staging    :: doctor regression on staging
+run_regression labtech dev       :: explicit dev
 ```
 
-**Generate Allure HTML report (manual, after run):**
+> `run_regression.bat` does not currently support a parallel argument.
+> For parallel regression, use `run regression dev N` (or
+> `run regression staging N`) via `run.bat` instead.
+
+---
+
+### Parallel notes
+
+- **Hard cap: 14 workers.** Each E2E test maps to a unique patient (`P1`–
+  `P14`) in `.claude/test_run_session.json`; running the same test on two
+  workers would collide on patient data. Beyond 14, xdist still spawns
+  workers but they sit idle.
+- **Headed-mode practical cap: 3–4** visible Chromium windows on a 1080p
+  monitor without overlap. Past that, the windows steal focus from each
+  other and the visual debugging value is lost.
+- **For 6+ workers**, switch `headless: true` in `config/test_config.yaml`
+  first. Headless frees ~30–40 % CPU/GPU per browser and lets `auto` (=
+  CPU count) be useful.
+- xdist tags every test line with `[gw0]`…`[gwN-1]` in the console output,
+  so you can still see which worker is doing what even when running
+  headless.
+
+---
+
+### Generate Allure HTML report (manual, after run)
 
 ```batch
 allure generate reports/allure-results -o reports/allure-report --clean
 ```
 
-> `run.bat` and `run_regression.bat` always use `.\Test\Scripts\pytest.exe` (venv). Never use the system `pytest`.
+> `run.bat` and `run_regression.bat` always use `.\Test\Scripts\pytest.exe`
+> (the project venv). Never use the system `pytest`.
 
 ---
 

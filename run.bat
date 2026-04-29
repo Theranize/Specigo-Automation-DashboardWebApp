@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 set PYTEST=.\Test\Scripts\pytest.exe
 set E2E_PATH=tests/e2e/
@@ -11,13 +11,18 @@ if "%1"=="" goto help
 set ENV_OPT=
 if not "%2"=="" set ENV_OPT=--env %2
 
-if /I "%1"=="e2e"           ( %PYTEST% %E2E_PATH%  -m "e2e"                   -v --tb=short %ENV_OPT% & goto end )
-if /I "%1"=="acceptance"    ( %PYTEST% %E2E_PATH%  -m "e2e and acceptance"    -v --tb=short %ENV_OPT% & goto end )
-if /I "%1"=="rejection"     ( %PYTEST% %E2E_PATH%  -m "e2e and rejection"     -v --tb=short %ENV_OPT% & goto end )
-if /I "%1"=="rectification" ( %PYTEST% %E2E_PATH%  -m "e2e and rectification" -v --tb=short %ENV_OPT% & goto end )
-if /I "%1"=="regression"    ( %PYTEST% %REG_PATH%  -m "regression"            -v --tb=short %ENV_OPT% & goto end )
-if /I "%1"=="smoke"         ( %PYTEST% %ALL_PATH%  -m "smoke"                 -v --tb=short %ENV_OPT% & goto end )
-if /I "%1"=="all"           ( %PYTEST% %ALL_PATH%                              -v --tb=short %ENV_OPT% & goto end )
+rem Optional 3rd positional: parallel worker count (number) or "auto".
+rem When set, runs with --dist worksteal for dynamic load balancing.
+set PAR_OPT=
+if not "%3"=="" set PAR_OPT=-n %3 --dist worksteal
+
+if /I "%1"=="e2e"           ( %PYTEST% %E2E_PATH%  -m "e2e"                   -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
+if /I "%1"=="acceptance"    ( %PYTEST% %E2E_PATH%  -m "e2e and acceptance"    -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
+if /I "%1"=="rejection"     ( %PYTEST% %E2E_PATH%  -m "e2e and rejection"     -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
+if /I "%1"=="rectification" ( %PYTEST% %E2E_PATH%  -m "e2e and rectification" -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
+if /I "%1"=="regression"    ( %PYTEST% %REG_PATH%  -m "regression"            -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
+if /I "%1"=="smoke"         ( %PYTEST% %ALL_PATH%  -m "smoke"                 -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
+if /I "%1"=="all"           ( %PYTEST% %ALL_PATH%                              -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
 
 if /I "%1"=="patient" goto do_patient
 
@@ -27,7 +32,7 @@ goto end
 
 :help
 echo.
-echo  Usage:  run ^<suite^> [env]
+echo  Usage:  run ^<suite^> [env] [N^|auto]
 echo.
 echo  Suites:
 echo    e2e             All E2E tests
@@ -43,25 +48,45 @@ echo  Env (optional, default = dev):
 echo    dev             https://frontenddevh1.specigo.com/
 echo    staging         https://staging.specigo.com/
 echo.
+echo  Parallel (optional, requires env first for suite mode):
+echo    N               Run with N parallel workers (e.g. 3, max 14 unique patients)
+echo    auto            One worker per logical CPU core
+echo    Adds: -n ^<N^> --dist worksteal
+echo.
 echo  Examples:
-echo    run acceptance              -^> dev (default)
-echo    run acceptance staging      -^> staging
-echo    run smoke dev               -^> dev (explicit)
-echo    run patient P1              -^> P1 on dev
-echo    run patient P1 P3 P5        -^> P1, P3, P5 on dev
-echo    run patient P1 P3 staging   -^> P1, P3 on staging
+echo    run acceptance                  -^> sequential, dev (default)
+echo    run acceptance staging          -^> sequential, staging
+echo    run acceptance dev 3            -^> 3 workers, dev
+echo    run acceptance staging auto     -^> auto workers, staging
+echo    run e2e dev 4                   -^> 4 workers, all e2e on dev
+echo    run patient P1                  -^> sequential, P1 on dev
+echo    run patient P1 P3 P5            -^> sequential, P1/P3/P5 on dev
+echo    run patient P1 P3 P5 3          -^> 3 workers, those patients on dev
+echo    run patient P1 P3 P5 3 staging  -^> 3 workers, those patients on staging
+echo    run patient P1 P3 staging       -^> sequential, P1/P3 on staging
 echo    run tests/e2e/acceptance/test_e2e_p5_relative_acceptance.py --env staging
 echo.
+goto end
 
 :do_patient
 shift
 set FILE_LIST=
 set ENV_OPT=
+set PAR_OPT=
 
 :patient_loop
 if "%1"=="" goto run_patients
+
+rem env tokens terminate parsing (preserve existing convention)
 if /I "%1"=="dev"     ( set ENV_OPT=--env dev     & shift & goto run_patients )
 if /I "%1"=="staging" ( set ENV_OPT=--env staging & shift & goto run_patients )
+
+rem parallel: "auto" or any all-digit token
+if /I "%1"=="auto" ( set PAR_OPT=-n auto --dist worksteal & shift & goto patient_loop )
+set _TOK=%1
+set _NONDIGIT=
+for /f "delims=0123456789" %%c in ("!_TOK!") do set _NONDIGIT=%%c
+if "!_NONDIGIT!"=="" if not "!_TOK!"=="" ( set PAR_OPT=-n !_TOK! --dist worksteal & shift & goto patient_loop )
 
 if /I "%1"=="P1"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_acceptance.py
 if /I "%1"=="P2"  set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p2_rejection.py
@@ -87,7 +112,7 @@ if "%FILE_LIST%"=="" (
     echo Valid IDs: P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 P13 P14
     goto end
 )
-%PYTEST% %FILE_LIST% -v --tb=short %ENV_OPT%
+%PYTEST% %FILE_LIST% -v --tb=short %ENV_OPT% %PAR_OPT%
 
 :end
 endlocal

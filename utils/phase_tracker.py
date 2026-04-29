@@ -253,6 +253,25 @@ class PhaseTracker:
         """True if at least one phase has been tracked."""
         return bool(self._data)
 
+    def merge_serialised(self, payload: Dict[str, Dict[str, List[dict]]]) -> None:
+        """Merge a serialised phase_data dict (from another worker) into this tracker.
+
+        Payload shape: {test_name: {patient_id: [PhaseEntry-as-dict, ...]}}.
+        Each parallel xdist invocation routes any given test to a single
+        worker, so test_names from different workers are disjoint. Within a
+        merged test_name, patient_ids are also disjoint. Phase order is
+        rebuilt from the entries themselves.
+        """
+        allowed = set(PhaseEntry.__dataclass_fields__.keys())
+        for test_name, patient_map in (payload or {}).items():
+            for pid, entries in (patient_map or {}).items():
+                for d in entries or []:
+                    if not isinstance(d, dict):
+                        continue
+                    entry = PhaseEntry(**{k: v for k, v in d.items() if k in allowed})
+                    self._register(test_name, pid, entry.phase_name)
+                    self._record(test_name, pid, entry)
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------

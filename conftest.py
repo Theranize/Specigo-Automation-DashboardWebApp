@@ -2,12 +2,14 @@
 """Root conftest: marker registration, fixture imports, trace management, and report generation."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
 import time
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Generator, Optional
@@ -18,6 +20,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from fixtures.browser_fixtures import browser_instance, page
 from fixtures.session_fixtures import login_as
+from flows.logout_flow import execute_logout
 from fixtures.data_fixtures import (
     login_credentials,
     front_desk_patient_data,
@@ -65,6 +68,64 @@ JSON_REPORT_PATH = SUMMARY_JSON
 
 _SESSION_START_ISO: str = ""
 
+# Visual hold (seconds) between a test finishing and the per-test browser
+# closing — gives the operator a chance to see the final page state, and on
+# failure follows the post-logout idle screen.
+POST_TEST_HOLD_SECONDS: float = 3.0
+
+# Where xdist workers dump their per-process result/phase partials so the
+# master can absorb them at sessionfinish.
+_PARTIALS_DIR: Path = Path("reports") / "runs" / "_partials"
+
+
+def _is_xdist_worker(session_or_config) -> bool:
+    """True when running inside an xdist worker (has a `workerinput` dict)."""
+    cfg = getattr(session_or_config, "config", session_or_config)
+    return getattr(cfg, "workerinput", None) is not None
+
+
+def _is_xdist_master(session_or_config) -> bool:
+    """True for non-xdist runs and for the xdist coordinator process."""
+    return not _is_xdist_worker(session_or_config)
+
+
+def _dump_worker_partial(worker_id: str) -> None:
+    """Serialise this worker's results + phase data to a JSON partial file."""
+    try:
+        _PARTIALS_DIR.mkdir(parents=True, exist_ok=True)
+        results = [asdict(r) for r in report_registry.results()]
+        phase_payload: dict = {}
+        if phase_tracker.has_data():
+            for tn, pmap in phase_tracker.get_report_data().items():
+                phase_payload[tn] = {
+                    pid: [asdict(e) for e in entries]
+                    for pid, entries in pmap.items()
+                }
+        payload = {"results": results, "phase_data": phase_payload}
+        (_PARTIALS_DIR / f"{worker_id}.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+    except Exception as exc:
+        print(f"  [xdist] worker {worker_id} failed to dump partial: {exc}")
+
+
+def _absorb_worker_partials() -> None:
+    """Read every worker partial, fold into master singletons, then unlink."""
+    if not _PARTIALS_DIR.exists():
+        return
+    for f in sorted(_PARTIALS_DIR.glob("*.json")):
+        try:
+            payload = json.loads(f.read_text(encoding="utf-8"))
+            report_registry.extend_from_dicts(payload.get("results") or [])
+            phase_tracker.merge_serialised(payload.get("phase_data") or {})
+        except Exception as exc:
+            print(f"  [xdist] could not absorb partial '{f.name}': {exc}")
+        finally:
+            try:
+                f.unlink()
+            except OSError:
+                pass
+
 # stash keys for inter-hook state (pytest 7+ stash API)
 _KEY_FAILED     = pytest.StashKey[bool]()
 _KEY_START_TIME = pytest.StashKey[float]()
@@ -108,12 +169,24 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_sessionstart(session: pytest.Session) -> None:
     """Record session start time and create all artifact/report directories."""
     global _SESSION_START_ISO
-    _SESSION_START_ISO = datetime.now().isoformat(timespec="seconds")
+    if _is_xdist_master(session):
+        _SESSION_START_ISO = datetime.now().isoformat(timespec="seconds")
     artifact_manager.ensure_dirs()
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """Generate all reports after the test session completes."""
+    """Generate all reports after the test session completes.
+
+    Under xdist: each worker dumps its partial state and returns early.
+    Master absorbs every partial into the singletons before running the
+    existing report-generation flow, so the summary covers all workers.
+    """
+    if _is_xdist_worker(session):
+        _dump_worker_partial(session.config.workerinput["workerid"])
+        return
+
+    _absorb_worker_partials()
+
     results          = report_registry.results()
     summary          = report_registry.summary()
     next_session_num = load_session_registry().get("total_sessions", 0) + 1
@@ -350,6 +423,20 @@ def _trace_and_timing(request: pytest.FixtureRequest) -> Generator[None, None, N
                         Path(staging).unlink(missing_ok=True)
                 except Exception:
                     pass
+
+    # Per-test cleanup: on failure attempt an explicit logout while the page
+    # is still open, then hold the final state briefly before the browser
+    # tears down (browser_instance is function-scoped, so close happens next).
+    if failed and _pg is not None:
+        try:
+            if not _pg.is_closed():
+                execute_logout(_pg)
+        except Exception:
+            pass  # best-effort; the next test gets a fresh browser regardless
+    try:
+        time.sleep(POST_TEST_HOLD_SECONDS)
+    except Exception:
+        pass
 
 
 # --- failure screenshot and report hook ---
