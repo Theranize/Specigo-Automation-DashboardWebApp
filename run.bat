@@ -12,9 +12,13 @@ set ENV_OPT=
 if not "%2"=="" set ENV_OPT=--env %2
 
 rem Optional 3rd positional: parallel worker count (number) or "auto".
-rem When set, runs with --dist worksteal for dynamic load balancing.
+rem When set, runs with --dist loadgroup so tests sharing a backend
+rem patient mobile (tagged via xdist_group in conftest.py) land on the
+rem same worker and serialise — preventing data races on the dev server.
+rem Tests with no mobile mapping (regression, smoke) fall back to default
+rem load distribution.
 set PAR_OPT=
-if not "%3"=="" set PAR_OPT=-n %3 --dist worksteal
+if not "%3"=="" set PAR_OPT=-n %3 --dist loadgroup
 
 if /I "%1"=="e2e"           ( %PYTEST% %E2E_PATH%  -m "e2e"                   -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
 if /I "%1"=="acceptance"    ( %PYTEST% %E2E_PATH%  -m "e2e and acceptance"    -v --tb=short %ENV_OPT% %PAR_OPT% & goto end )
@@ -51,7 +55,7 @@ echo.
 echo  Parallel (optional, requires env first for suite mode):
 echo    N               Run with N parallel workers (e.g. 3, max 14 unique patients)
 echo    auto            One worker per logical CPU core
-echo    Adds: -n ^<N^> --dist worksteal
+echo    Adds: -n ^<N^> --dist loadgroup
 echo.
 echo  Examples:
 echo    run acceptance                  -^> sequential, dev (default)
@@ -82,11 +86,11 @@ if /I "%1"=="dev"     ( set ENV_OPT=--env dev     & shift & goto run_patients )
 if /I "%1"=="staging" ( set ENV_OPT=--env staging & shift & goto run_patients )
 
 rem parallel: "auto" or any all-digit token
-if /I "%1"=="auto" ( set PAR_OPT=-n auto --dist worksteal & shift & goto patient_loop )
+if /I "%1"=="auto" ( set PAR_OPT=-n auto --dist loadgroup & shift & goto patient_loop )
 set _TOK=%1
 set _NONDIGIT=
 for /f "delims=0123456789" %%c in ("!_TOK!") do set _NONDIGIT=%%c
-if "!_NONDIGIT!"=="" if not "!_TOK!"=="" ( set PAR_OPT=-n !_TOK! --dist worksteal & shift & goto patient_loop )
+if "!_NONDIGIT!"=="" if not "!_TOK!"=="" ( set PAR_OPT=-n !_TOK! --dist loadgroup & shift & goto patient_loop )
 
 if /I "%1"=="P1"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_acceptance.py
 if /I "%1"=="P2"  set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p2_rejection.py

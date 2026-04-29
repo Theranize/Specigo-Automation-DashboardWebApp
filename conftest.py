@@ -164,6 +164,33 @@ def pytest_configure(config: pytest.Config) -> None:
         config.addinivalue_line("markers", marker)
 
 
+# --- xdist grouping by patient mobile ---
+# Tests that share the same backend mobile number cannot run in parallel —
+# they read/write the same patient record on the dev server. Tag each test
+# with `xdist_group("mobile-<n>")` so xdist's --dist loadgroup distribution
+# pins same-mobile tests to the same worker (sequential within the group,
+# parallel across groups). Mapping comes from .claude/test_run_session.json.
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
+    """Apply xdist_group markers based on each e2e test's backend mobile."""
+    try:
+        session_map = json.loads(
+            (Path(".claude") / "test_run_session.json").read_text(encoding="utf-8")
+        )
+    except (OSError, ValueError):
+        return  # missing/malformed registry → skip grouping, fall back to default load
+    e2e      = session_map.get("e2e_assignments", {}) or {}
+    patients = session_map.get("_patient_map", {}) or {}
+    for item in items:
+        meta = e2e.get(getattr(item, "originalname", "")) or e2e.get(item.name)
+        if not meta:
+            continue
+        pid    = meta.get("patient_id") or ""
+        mobile = (patients.get(pid) or {}).get("mobile") or ""
+        if mobile:
+            item.add_marker(pytest.mark.xdist_group(f"mobile-{mobile}"))
+
+
 # --- session lifecycle ---
 
 def pytest_sessionstart(session: pytest.Session) -> None:
