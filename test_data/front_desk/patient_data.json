@@ -14,7 +14,7 @@
       "expected_error": { "should_appear": false, "message": "" },
       "patient": {
         "salutation": "Master",
-        "first_name": "op", "middle_name": "Kumar", "last_name": "Mishra",
+        "first_name": "Aditya", "middle_name": "Kumar", "last_name": "Mishra",
         "gender": "", "risk_level": "Normal", "age": 12, "date_of_birth": "",
         "mobile_number": "7777777777", "email": "",
         "address": { "pincode": "", "address_line": "" }

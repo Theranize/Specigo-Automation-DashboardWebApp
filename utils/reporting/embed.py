@@ -3,9 +3,8 @@
 Shared helpers for embedding artifact assets into report HTML.
 
 Used by:
-    * `generators/stakeholder_html.py` — failure-block image embedding.
-    * `generators/phase_html.py`       — inline failure screenshot + highlight
-                                          overlay in patient_phase_report.html.
+    * `generators/phase_html.py` — inline failure screenshot + highlight
+                                    overlay in patient_phase_report.html.
 
 MNC standard: type hints, docstrings, section comments.
 """

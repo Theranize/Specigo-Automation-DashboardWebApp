@@ -49,13 +49,11 @@ from utils.reporting import (
     report_registry,
     phase_html_generator,
     phase_json_generator,
-    stakeholder_html_generator,
-    stakeholder_pdf_generator,
     save_run_snapshot,
     register_session,
+    load_session_registry,
     get_batch_number,
     resolve_report_paths,
-    REPORTS_ROOT,
 )
 from utils.error_detector import detect_ui_errors
 from utils.failure_artifact import write_highlight_sidecar
@@ -116,10 +114,11 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     """Generate all reports after the test session completes."""
-    results   = report_registry.results()
-    summary   = report_registry.summary()
-    run_id    = datetime.now().strftime("run_%Y%m%d_%H%M%S")
-    start_iso = _SESSION_START_ISO
+    results          = report_registry.results()
+    summary          = report_registry.summary()
+    next_session_num = load_session_registry().get("total_sessions", 0) + 1
+    run_id           = f"Run_Sp_{next_session_num:010d}"
+    start_iso        = _SESSION_START_ISO
 
     phase_data = phase_tracker.get_report_data() if phase_tracker.has_data() else {}
 
@@ -146,7 +145,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     s_html, s_json, s_csv, ph_html, ph_json = resolve_report_paths(batch)
 
-    html_generator.generate(results, summary, s_html)
+    html_generator.generate(results, summary, s_html, run_id=run_id)
     json_generator.generate(results, summary, s_json)
     csv_generator.generate(results, s_csv)
 
@@ -161,42 +160,10 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     print("  [SESSION SYSTEM]  Summary report (Batch {})          -> {}".format(batch, s_html))
 
-    stakeholder_html_path, stakeholder_pdf_path, stakeholder_pdf_ok = _generate_stakeholder_report(
-        results, summary, run_id, phase_data
-    )
-
     allure_ok = _run_allure_generate()
     _print_summary(
         summary, allure_ok, s_html, s_json, s_csv, ph_html, session_num, batch,
-        stakeholder_html=stakeholder_html_path,
-        stakeholder_pdf=stakeholder_pdf_path,
-        stakeholder_pdf_ok=stakeholder_pdf_ok,
     )
-
-
-def _generate_stakeholder_report(results, summary, run_id, phase_data=None):
-    """Render the manager-facing HTML + PDF report. Never fails the session."""
-    out_dir  = REPORTS_ROOT / "stakeholder"
-    run_html = out_dir / f"{run_id}.html"
-    run_pdf  = out_dir / f"{run_id}.pdf"
-    latest_html = out_dir / "latest.html"
-    latest_pdf  = out_dir / "latest.pdf"
-
-    try:
-        stakeholder_html_generator.generate(results, summary, run_html, phase_data=phase_data)
-        shutil.copy2(run_html, latest_html)
-    except Exception as exc:
-        print(f"  [STAKEHOLDER] HTML skipped: {exc}")
-        return None, None, False
-
-    pdf_ok = stakeholder_pdf_generator.generate(run_html, run_pdf)
-    if pdf_ok:
-        try:
-            shutil.copy2(run_pdf, latest_pdf)
-        except OSError as exc:
-            print(f"  [STAKEHOLDER] latest.pdf copy skipped: {exc}")
-
-    return latest_html, (latest_pdf if pdf_ok else None), pdf_ok
 
 
 def _run_allure_generate() -> bool:
@@ -260,9 +227,6 @@ def _print_summary(
     phase_html:          Optional[Path] = None,
     session_num:         int            = 0,
     batch:               int            = 1,
-    stakeholder_html:    Optional[Path] = None,
-    stakeholder_pdf:     Optional[Path] = None,
-    stakeholder_pdf_ok:  bool           = False,
 ) -> None:
     """Print a concise session summary banner to stdout."""
     s_html  = summary_html or SUMMARY_HTML
@@ -305,9 +269,6 @@ def _print_summary(
         "    JSON -> {}".format(s_json),
         "    CSV  -> {}".format(s_csv),
         phase_line,
-        "  Stakeholder Report:",
-        "    HTML -> {}".format(stakeholder_html or "(not generated)"),
-        "    PDF  -> {}".format(stakeholder_pdf or "(not generated)"),
         "  Allure Report:",
         "    Results -> {}  (raw)".format(ALLURE_RESULTS_DIR),
         "    HTML    -> {}  (open in browser)".format(allure_html),
