@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Per-patient phase manifests for the super-user (admin/manager) test runner.
+"""Per-patient phase manifests + patient catalog accessors.
 
-Each manifest is a `list[PhaseStep]` whose items mechanically mirror the
-canonical patient test (tests/e2e/{acceptance,rejection}/test_e2e_p<N>*.py).
-Phase labels here MUST match the corresponding `phase_tracker.track(...)`
-labels in those tests so the patient phase report renders identically.
+Each manifest is a `list[PhaseStep]` whose items mechanically describe one
+patient's phase sequence. The same registry drives both the normal-mode
+runners (tests/e2e/{acceptance,rejection}/test_e2e_*.py) and the super-user
+runner (tests/e2e/super_user/test_super_user_e2e.py).
 
-Plan reference: docs/role_session.md §5.7.
+Adding a new patient = one builder function + one PATIENT_MANIFESTS entry +
+one entry in .claude/test_run_session.json::patients. No new test file.
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ from flows.doctor_flow import execute_doctor_flow
 from flows.super_user_orchestrator import PhaseStep
 
 
-_ROOT = Path(__file__).resolve().parents[3]
+_ROOT = Path(__file__).resolve().parents[2]
 
 # Lazy-loaded DDT singletons (one read per process).
 _DDT: Dict[str, dict] = {}
@@ -47,6 +48,42 @@ def _with_pid(nested: dict, pid: str) -> dict:
 
 # Dummy payment dict used by the FD-only error tests (P7, P11).
 _DUMMY_PAYMENT = {"tests": [], "payment": {"home_collection": 0, "cash": 0, "online": 0}}
+
+
+# Predicate for FD-only error tests: PASS only when the expected error fired
+# AND the on-screen message matched the DDT's expected_error block.
+def _expected_error_predicate(r: dict) -> bool:
+    return bool(r.get("error_found") and r.get("expected_error_matched"))
+
+
+# --- catalog helpers (read .claude/test_run_session.json) --------------------
+
+_CATALOG_CACHE: Dict[str, dict] = {}
+
+
+def patient_catalog() -> Dict[str, dict]:
+    """Return the patients block from .claude/test_run_session.json (cached)."""
+    if "patients" not in _CATALOG_CACHE:
+        session = load_json(_ROOT / ".claude/test_run_session.json")
+        _CATALOG_CACHE["patients"] = session.get("patients", {}) or {}
+    return _CATALOG_CACHE["patients"]
+
+
+def patients_for_file(primary_file: str) -> List[str]:
+    """Patient IDs whose primary_file == 'acceptance' or 'rejection'.
+
+    Returns the IDs in catalog declaration order, which is the natural
+    P1..P14 sort order today.
+    """
+    return [
+        pid for pid, meta in patient_catalog().items()
+        if meta.get("primary_file") == primary_file
+    ]
+
+
+def markers_for(pid: str) -> List[str]:
+    """All pytest markers configured for a patient (e.g. ['e2e','acceptance'])."""
+    return list(patient_catalog().get(pid, {}).get("markers", []))
 
 
 # --- per-patient builders ----------------------------------------------------
@@ -133,22 +170,28 @@ def _build_p4(pid: str) -> List[PhaseStep]:
 
 
 def _build_p7(pid: str) -> List[PhaseStep]:
-    """P7 — single-phase FD limit-error check."""
+    """P7 — single-phase FD limit-error check (PASS iff expected error fires)."""
     PATIENT = _ddt("test_data/front_desk/patient_data.json")
     pe = _entry(PATIENT["patients"], "patient_id_ref", pid)
     return [
-        PhaseStep("Front Desk", "fd", "primary", "front_desk",
-                  lambda page: execute_front_desk_registration(page, pe, _DUMMY_PAYMENT)),
+        PhaseStep(
+            "Front Desk", "fd", "primary", "front_desk",
+            lambda page: execute_front_desk_registration(page, pe, _DUMMY_PAYMENT),
+            success_predicate=_expected_error_predicate,
+        ),
     ]
 
 
 def _build_p11(pid: str) -> List[PhaseStep]:
-    """P11 — single-phase FD duplicate-mobile error check."""
+    """P11 — single-phase FD duplicate-mobile error check (PASS iff expected error fires)."""
     PATIENT = _ddt("test_data/front_desk/patient_data.json")
     pe = _entry(PATIENT["patients"], "patient_id_ref", pid)
     return [
-        PhaseStep("Front Desk", "fd", "primary", "front_desk",
-                  lambda page: execute_front_desk_registration(page, pe, _DUMMY_PAYMENT)),
+        PhaseStep(
+            "Front Desk", "fd", "primary", "front_desk",
+            lambda page: execute_front_desk_registration(page, pe, _DUMMY_PAYMENT),
+            success_predicate=_expected_error_predicate,
+        ),
     ]
 
 
@@ -380,7 +423,12 @@ PATIENT_MANIFESTS: Dict[str, Callable[[str], List[PhaseStep]]] = {
     "P14": _build_p14,
 }
 
-#: Maps patient ID → FLOW_REGISTRY key for that patient's super-user variant.
+#: Maps patient ID → FLOW_REGISTRY key used by phase_tracker.track in normal-mode runs.
+PATIENT_TEST_KEYS: Dict[str, str] = {
+    pid: f"test_e2e_{pid.lower()}" for pid in PATIENT_MANIFESTS
+}
+
+#: Maps patient ID → FLOW_REGISTRY key used by phase_tracker.track in super-user runs.
 SUPER_USER_TEST_KEYS: Dict[str, str] = {
     pid: f"test_super_user_{pid.lower()}" for pid in PATIENT_MANIFESTS
 }

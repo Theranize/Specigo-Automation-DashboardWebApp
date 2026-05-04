@@ -34,12 +34,17 @@ class PhaseStep:
       runner — callable(page) -> dict with keys {completed, error_found,
                error_message, ...}. The orchestrator calls this inside a
                phase_tracker.track(...) block.
+      success_predicate — optional override for the default pass/fail check.
+        If set, called with the runner result; the step PASSES iff it returns
+        True. Used by error-test patients (P7 limit, P11 duplicate-mobile)
+        whose expected outcome is `error_found AND expected_error_matched`.
     """
     label:  str
     stage:  Stage
     kind:   Kind
     role:   str
     runner: Callable[[object], dict]
+    success_predicate: Optional[Callable[[dict], bool]] = None
 
 
 @dataclass
@@ -114,9 +119,16 @@ def run(
 
         with phase_tracker.track(page, pid, step.label, test_key):
             r = step.runner(page)
-            if r.get("error_found"):
-                pytest.fail(f"[{pid}] {step.label}: {r.get('error_message')}")
-            assert r.get("completed"), f"[{pid}] {step.label}: step did not complete"
+            if step.success_predicate is not None:
+                if not step.success_predicate(r):
+                    pytest.fail(
+                        f"[{pid}] {step.label}: success_predicate returned False; "
+                        f"result={r}"
+                    )
+            else:
+                if r.get("error_found"):
+                    pytest.fail(f"[{pid}] {step.label}: {r.get('error_message')}")
+                assert r.get("completed"), f"[{pid}] {step.label}: step did not complete"
 
         step_idx = STAGE_ORDER[step.stage]
 

@@ -97,8 +97,11 @@ echo.
 goto end
 
 :do_patient
+rem Patients now live in two parametrized files (acceptance + rejection).
+rem Build a -k filter from accumulated patient IDs (e.g. "P1 or P3 or P5") and
+rem always pass both files; pytest deselects parametrize ids that don't match.
 shift
-set FILE_LIST=
+set PIDS=
 set ENV_OPT=
 set PAR_OPT=
 
@@ -116,31 +119,36 @@ set _NONDIGIT=
 for /f "delims=0123456789" %%c in ("!_TOK!") do set _NONDIGIT=%%c
 if "!_NONDIGIT!"=="" if not "!_TOK!"=="" ( set PAR_OPT=-n !_TOK! --dist loadgroup & shift & goto patient_loop )
 
-if /I "%1"=="P1"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_acceptance.py
-if /I "%1"=="P2"  set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p2_rejection.py
-if /I "%1"=="P3"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p3_partial_approve.py
-if /I "%1"=="P4"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p4_rectification.py
-if /I "%1"=="P5"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p5_relative_acceptance.py
-if /I "%1"=="P6"  set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p6_rejection.py
-if /I "%1"=="P7"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p7_limit_error.py
-if /I "%1"=="P8"  set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p8_new_patient_acceptance.py
-if /I "%1"=="P9"  set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p9_new_patient_rejection.py
-if /I "%1"=="P10" set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p10_new_patient_partial.py
-if /I "%1"=="P11" set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p10_duplicate_mobile_error.py
-if /I "%1"=="P12" set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p12_relative_acceptance.py
-if /I "%1"=="P13" set FILE_LIST=%FILE_LIST% tests/e2e/rejection/test_e2e_p13_partial_rejection.py
-if /I "%1"=="P14" set FILE_LIST=%FILE_LIST% tests/e2e/acceptance/test_e2e_p14_partial_approve.py
+if /I "%1"=="P1"  set PIDS=!PIDS! P1
+if /I "%1"=="P2"  set PIDS=!PIDS! P2
+if /I "%1"=="P3"  set PIDS=!PIDS! P3
+if /I "%1"=="P4"  set PIDS=!PIDS! P4
+if /I "%1"=="P5"  set PIDS=!PIDS! P5
+if /I "%1"=="P6"  set PIDS=!PIDS! P6
+if /I "%1"=="P7"  set PIDS=!PIDS! P7
+if /I "%1"=="P8"  set PIDS=!PIDS! P8
+if /I "%1"=="P9"  set PIDS=!PIDS! P9
+if /I "%1"=="P10" set PIDS=!PIDS! P10
+if /I "%1"=="P11" set PIDS=!PIDS! P11
+if /I "%1"=="P12" set PIDS=!PIDS! P12
+if /I "%1"=="P13" set PIDS=!PIDS! P13
+if /I "%1"=="P14" set PIDS=!PIDS! P14
 
 shift
 goto patient_loop
 
 :run_patients
-if "%FILE_LIST%"=="" (
+if "!PIDS!"=="" (
     echo No valid patient IDs provided.
     echo Valid IDs: P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 P13 P14
     goto end
 )
-%PYTEST% %FILE_LIST% -v --tb=short %ENV_OPT% %PAR_OPT%
+rem Build "[P1] or [P3] or [P5]" — bracketed so "P1" doesn't substring-match P11/P12/P14.
+set K_FILTER=
+for %%p in (!PIDS!) do (
+    if "!K_FILTER!"=="" ( set K_FILTER=[%%p] ) else ( set K_FILTER=!K_FILTER! or [%%p] )
+)
+%PYTEST% tests/e2e/acceptance/test_e2e_acceptance.py tests/e2e/rejection/test_e2e_rejection.py -k "!K_FILTER!" -v --tb=short %ENV_OPT% %PAR_OPT%
 goto end
 
 rem ─── Super-user (admin/manager) parser ─────────────────────────────────────

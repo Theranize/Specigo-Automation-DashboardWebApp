@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 
 from flows.super_user_orchestrator import ScopeSpec, run as orchestrator_run
-from tests.e2e.super_user._manifest import PATIENT_MANIFESTS, SUPER_USER_TEST_KEYS
+from tests.e2e._manifest import PATIENT_MANIFESTS, SUPER_USER_TEST_KEYS
 
 
 def pytest_generate_tests(metafunc) -> None:

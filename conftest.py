@@ -198,27 +198,28 @@ def pytest_configure(config: pytest.Config) -> None:
 # parallel across groups). Mapping comes from .claude/test_run_session.json.
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
-    """Apply xdist_group markers based on each e2e test's backend mobile."""
+    """Apply xdist_group markers based on each e2e test's backend mobile.
+
+    All E2E test functions today are parametrized on patient ID — the
+    parametrize id is the literal `P<N>` token in `item.name` (e.g.
+    `test_e2e_acceptance[P1]`, `test_super_user_e2e[P2]`). Extract that
+    `P<N>`, look up its mobile in `_patient_map`, and pin same-mobile tests
+    to the same xdist worker via `xdist_group("mobile-<n>")`. Tests with no
+    `[P<N>]` parametrize id (regression, smoke) fall back to default load
+    distribution unchanged.
+    """
     try:
         session_map = json.loads(
             (Path(".claude") / "test_run_session.json").read_text(encoding="utf-8")
         )
     except (OSError, ValueError):
         return  # missing/malformed registry → skip grouping, fall back to default load
-    e2e      = session_map.get("e2e_assignments", {}) or {}
     patients = session_map.get("_patient_map", {}) or {}
     for item in items:
-        meta = e2e.get(getattr(item, "originalname", "")) or e2e.get(item.name)
-        # Super-user parametrized test: originalname is `test_super_user_e2e`
-        # and parametrize id is the patient (e.g. "P1") → look up
-        # `test_super_user_p1` in e2e_assignments.
-        if not meta and getattr(item, "originalname", "") == "test_super_user_e2e":
-            m = re.search(r"\[(P\d+)\]", item.name)
-            if m:
-                meta = e2e.get(f"test_super_user_{m.group(1).lower()}")
-        if not meta:
+        m = re.search(r"\[(P\d+)\]", item.name)
+        if not m:
             continue
-        pid    = meta.get("patient_id") or ""
+        pid    = m.group(1)
         mobile = (patients.get(pid) or {}).get("mobile") or ""
         if mobile:
             item.add_marker(pytest.mark.xdist_group(f"mobile-{mobile}"))

@@ -81,139 +81,63 @@ def _rejection_3cycle(a: str, b: str, c: str, d: str, final: str) -> List[str]:
     return [p.format(a=a, b=b, c=c, d=d, final=final) for p in _REJECTION_3CYCLE_TEMPLATE]
 
 
-FLOW_REGISTRY: Dict[str, Dict] = {
-    # ── Acceptance flows ──────────────────────────────────────────────────
-    "test_e2e_acceptance": {
-        "label":       "E2E Acceptance Flow",
-        "short":       "e2eacceptance",
-        "phase_order": _STD_ACCEPTANCE + ["Published Reports"],
-    },
-    "test_e2e_p3_partial_approve": {
-        "label":       "P3 Partial Approve",
-        "short":       "e2ep3partial",
-        "phase_order": _STD_ACCEPTANCE,
-    },
-    "test_e2e_p4_rectification": {
-        "label":       "P4 Rectification",
-        "short":       "e2ep4rectify",
-        "phase_order": [
-            "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
-            "Doctor (Approve)", "Doctor (Rectify)",
-        ],
-    },
-    "test_e2e_p5_relative_acceptance": {
-        "label":       "P5 Relative Acceptance",
-        "short":       "e2ep5relative",
-        "phase_order": _STD_ACCEPTANCE,
-    },
-    "test_e2e_p7_limit_error": {
-        "label":       "P7 Add-Relative Limit",
-        "short":       "e2ep7limit",
-        "phase_order": ["Front Desk"],
-    },
-    "test_e2e_p8_new_patient_acceptance": {
-        "label":       "P8 New Patient Acceptance",
-        "short":       "e2ep8newaccept",
-        "phase_order": _STD_ACCEPTANCE,
-    },
-    # NOTE: file name is `test_e2e_p10_duplicate_mobile_error.py` but the
-    # `_TEST` constant inside the file (which phase_tracker keys by) is
-    # `test_e2e_p11_duplicate_mobile_error`. The registry key MUST match
-    # `_TEST` so flow_phase_order() resolves correctly in the phase report.
-    "test_e2e_p11_duplicate_mobile_error": {
-        "label":       "P11 Duplicate Mobile",
-        "short":       "e2ep11dupmobile",
-        "phase_order": ["Front Desk"],
-    },
-    "test_e2e_p12_relative_acceptance": {
-        "label":       "P12 New Relative + Rectify",
-        "short":       "e2ep12relrectify",
-        "phase_order": _STD_ACCEPTANCE,
-    },
-    "test_e2e_p14_partial_approve": {
-        "label":       "P14 Partial Approve",
-        "short":       "e2ep14partial",
-        "phase_order": [
-            "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
-            "Doctor (Partial Approve)",
-        ],
-    },
-
-    # ── Rejection flows ───────────────────────────────────────────────────
-    "test_e2e_p2_rejection": {
-        "label":       "P2 3-Cycle Rejection",
-        "short":       "e2ep2rejection",
-        "phase_order": _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Partial Approve"),
-    },
-    "test_e2e_p6_rejection": {
-        "label":       "P6 3-Cycle Rejection",
-        "short":       "e2ep6rejection",
-        "phase_order": _rejection_3cycle("Urine", "Serum", "CBC", "WB", "Approve"),
-    },
-    "test_e2e_p9_new_patient_rejection": {
-        "label":       "P9 New Patient Rejection",
-        "short":       "e2ep9newreject",
-        "phase_order": _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Approve"),
-    },
-    "test_e2e_p10_new_patient_partial": {
-        "label":       "P10 New Patient Partial + Rectify",
-        "short":       "e2ep10newpartial",
-        "phase_order": [
-            "Front Desk", "Phlebotomist",
-            "Accession (Reject 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
-            "Lab Technician",
-            "Doctor (Approve)", "Doctor (Rectify LFT)",
-        ],
-    },
-    "test_e2e_p13_partial_rejection": {
-        "label":       "P13 Partial Rejection",
-        "short":       "e2ep13partialreject",
-        "phase_order": [
-            "Front Desk", "Phlebotomist",
-            "Accession (Reject Serum)", "Phlebotomist (Recollect Serum)", "Accession (Re-accept Serum)",
-            "Lab Technician (Reject 24h)",
-            "Accession (Reassign 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
-            "Lab Technician (Save All)",
-            "Doctor (Approve All)",
-        ],
-    },
+# Canonical phase order per patient — single source of truth for the phase
+# report's "expected phases" view. The same list is materialised under TWO
+# FLOW_REGISTRY keys per patient:
+#   `test_e2e_p<N>`        — used by the parametrized acceptance/rejection runners
+#   `test_super_user_p<N>` — used by the admin/manager super-user runner
+# Both runners walk the SAME PhaseStep manifest from tests/e2e/_manifest.py,
+# so their phase labels stay in sync with the entries below by construction.
+_PATIENT_PHASE_ORDERS: Dict[str, List[str]] = {
+    "P1":  _STD_ACCEPTANCE,
+    "P2":  _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Partial Approve"),
+    "P3":  _STD_ACCEPTANCE,
+    "P4":  [
+        "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
+        "Doctor (Approve)", "Doctor (Rectify)",
+    ],
+    "P5":  _STD_ACCEPTANCE,
+    "P6":  _rejection_3cycle("Urine", "Serum", "CBC", "WB", "Approve"),
+    "P7":  ["Front Desk"],
+    "P8":  _STD_ACCEPTANCE,
+    "P9":  _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Approve"),
+    "P10": [
+        "Front Desk", "Phlebotomist",
+        "Accession (Reject 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
+        "Lab Technician",
+        "Doctor (Approve)", "Doctor (Rectify LFT)",
+    ],
+    "P11": ["Front Desk"],
+    "P12": _STD_ACCEPTANCE,
+    "P13": [
+        "Front Desk", "Phlebotomist",
+        "Accession (Reject Serum)", "Phlebotomist (Recollect Serum)", "Accession (Re-accept Serum)",
+        "Lab Technician (Reject 24h)",
+        "Accession (Reassign 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
+        "Lab Technician (Save All)",
+        "Doctor (Approve All)",
+    ],
+    "P14": [
+        "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
+        "Doctor (Partial Approve)",
+    ],
 }
 
 
-# =============================================================================
-# SUPER-USER FLOW_REGISTRY  –  one entry per patient (P1..P14)
-# =============================================================================
-#: Each `test_super_user_p<N>` mirrors the canonical patient's phase_order so
-#: the patient phase report renders identically whether a run is driven by
-#: per-role users or by an admin/manager super-user. Phase labels MUST match
-#: the canonical entry exactly — the manifest reuses the same labels.
-def _register_super_user_flows() -> None:
-    canonical_map = {
-        "test_super_user_p1":  ("test_e2e_acceptance",                 "P1 Super-User Acceptance"),
-        "test_super_user_p2":  ("test_e2e_p2_rejection",               "P2 Super-User Rejection"),
-        "test_super_user_p3":  ("test_e2e_p3_partial_approve",         "P3 Super-User Partial Approve"),
-        "test_super_user_p4":  ("test_e2e_p4_rectification",           "P4 Super-User Rectification"),
-        "test_super_user_p5":  ("test_e2e_p5_relative_acceptance",     "P5 Super-User Relative Acceptance"),
-        "test_super_user_p6":  ("test_e2e_p6_rejection",               "P6 Super-User Rejection"),
-        "test_super_user_p7":  ("test_e2e_p7_limit_error",             "P7 Super-User Limit Error"),
-        "test_super_user_p8":  ("test_e2e_p8_new_patient_acceptance",  "P8 Super-User New Patient Acceptance"),
-        "test_super_user_p9":  ("test_e2e_p9_new_patient_rejection",   "P9 Super-User New Patient Rejection"),
-        "test_super_user_p10": ("test_e2e_p10_new_patient_partial",    "P10 Super-User New Patient Partial"),
-        "test_super_user_p11": ("test_e2e_p11_duplicate_mobile_error", "P11 Super-User Duplicate Mobile"),
-        "test_super_user_p12": ("test_e2e_p12_relative_acceptance",    "P12 Super-User New Relative"),
-        "test_super_user_p13": ("test_e2e_p13_partial_rejection",      "P13 Super-User Partial Rejection"),
-        "test_super_user_p14": ("test_e2e_p14_partial_approve",        "P14 Super-User Partial Approve"),
+FLOW_REGISTRY: Dict[str, Dict] = {}
+
+for _pid, _order in _PATIENT_PHASE_ORDERS.items():
+    _suffix = _pid.lower()
+    FLOW_REGISTRY[f"test_e2e_{_suffix}"] = {
+        "label":       f"{_pid} E2E",
+        "short":       f"e2e{_suffix}",
+        "phase_order": list(_order),
     }
-    for super_key, (canon_key, label) in canonical_map.items():
-        canon = FLOW_REGISTRY.get(canon_key, {})
-        FLOW_REGISTRY[super_key] = {
-            "label":       label,
-            "short":       super_key.replace("_", ""),
-            "phase_order": list(canon.get("phase_order", [])),
-        }
-
-
-_register_super_user_flows()
+    FLOW_REGISTRY[f"test_super_user_{_suffix}"] = {
+        "label":       f"{_pid} Super-User",
+        "short":       f"superuser{_suffix}",
+        "phase_order": list(_order),
+    }
 
 
 def flow_label(test_name: str) -> str:

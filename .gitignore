@@ -15,4 +15,9 @@ reports/
 .env
 
 # Local docs (not shared in git)
-docs
+docs/
+
+
+archive/
+
+
