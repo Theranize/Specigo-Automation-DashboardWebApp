@@ -145,6 +145,31 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Target environment: dev (default) or staging",
     )
 
+    # ── Super-user (admin/manager) CLI options ──────────────────────────────
+    # All five default to None/False so they have zero effect on existing tests.
+    # The super-user entry test (tests/e2e/super_user/test_super_user_e2e.py)
+    # parametrizes only when --super-targets is set — otherwise it collects
+    # nothing and discovery is unchanged.
+    parser.addoption("--super-as",
+        action="store", default=None, choices=["admin", "manager"],
+        help="Super-user role driving the run (admin|manager)")
+    parser.addoption("--super-targets",
+        action="store", default=None,
+        help="Comma-separated patient IDs (P1..P14) for the super-user run")
+    parser.addoption("--super-until",
+        action="store", default=None, choices=["fd", "phlebo", "acc", "labt", "doc"],
+        help="Super-user stop stage (`till X`)")
+    parser.addoption("--super-continue",
+        action="store_true", default=False,
+        help="Hand off to per-role users after super-user's stop stage")
+    parser.addoption("--super-continue-till",
+        action="store", default=None, choices=["fd", "phlebo", "acc", "labt", "doc"],
+        help="Cap stage for the per-role continuation (`continue till Y`)")
+    parser.addoption("--super-reassign",
+        action="store", default="default", choices=["default", "super", "users"],
+        help="Reassign/recollect ownership override "
+             "(super = +reassign-admin, users = +reassign-users)")
+
 
 # --- marker registration ---
 
@@ -162,6 +187,7 @@ def pytest_configure(config: pytest.Config) -> None:
     ]
     for marker in _MARKERS:
         config.addinivalue_line("markers", marker)
+    _validate_super_user_options(config)
 
 
 # --- xdist grouping by patient mobile ---
@@ -183,12 +209,49 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
     patients = session_map.get("_patient_map", {}) or {}
     for item in items:
         meta = e2e.get(getattr(item, "originalname", "")) or e2e.get(item.name)
+        # Super-user parametrized test: originalname is `test_super_user_e2e`
+        # and parametrize id is the patient (e.g. "P1") → look up
+        # `test_super_user_p1` in e2e_assignments.
+        if not meta and getattr(item, "originalname", "") == "test_super_user_e2e":
+            m = re.search(r"\[(P\d+)\]", item.name)
+            if m:
+                meta = e2e.get(f"test_super_user_{m.group(1).lower()}")
         if not meta:
             continue
         pid    = meta.get("patient_id") or ""
         mobile = (patients.get(pid) or {}).get("mobile") or ""
         if mobile:
             item.add_marker(pytest.mark.xdist_group(f"mobile-{mobile}"))
+
+
+def _validate_super_user_options(config: pytest.Config) -> None:
+    """Parse-time validation for super-user CLI options.
+
+    Rejects `till X continue till Y` when canonical order of Y < X. Also
+    rejects --super-targets without --super-as (and vice versa) so misuse
+    fails fast instead of silently collecting nothing.
+    """
+    targets = config.getoption("--super-targets", default=None)
+    super_as = config.getoption("--super-as", default=None)
+    if bool(targets) ^ bool(super_as):
+        raise pytest.UsageError(
+            "Super-user mode requires both --super-as and --super-targets"
+        )
+    if not targets:
+        return
+    until      = config.getoption("--super-until", default=None)
+    cont_till  = config.getoption("--super-continue-till", default=None)
+    has_cont   = config.getoption("--super-continue", default=False)
+    order = {"fd": 1, "phlebo": 2, "acc": 3, "labt": 4, "doc": 5}
+    if cont_till and not has_cont:
+        raise pytest.UsageError(
+            "--super-continue-till requires --super-continue"
+        )
+    if until and cont_till and order[cont_till] < order[until]:
+        raise pytest.UsageError(
+            f"--super-continue-till ({cont_till}) must be at or after "
+            f"--super-until ({until}) in canonical order fd→phlebo→acc→labt→doc"
+        )
 
 
 # --- session lifecycle ---

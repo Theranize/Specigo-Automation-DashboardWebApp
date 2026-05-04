@@ -171,10 +171,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 .fbtn.fa-fail.active{background:#ff4d4f;border-color:#ff4d4f}
 .fbtn.fa-error.active{background:#fa8c16;border-color:#fa8c16}
 .fbtn.fa-skip.active{background:#8c8c8c;border-color:#8c8c8c}
-.search-box{margin-left:auto;padding:6px 14px;border:1px solid var(--border);
-            border-radius:20px;font-size:.82rem;outline:none;
-            transition:border-color .12s;min-width:200px;font-family:inherit}
-.search-box:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(22,119,255,.1)}
 /* ===== RESULT TABLE ===== */
 .tbl-wrap{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
 table{width:100%;border-collapse:collapse}
@@ -277,14 +273,13 @@ function switchMainTab(id) {
 }
 
 /* ---- Current-run table filter ---- */
-var _sf = 'ALL', _sq = '';
+var _sf = 'ALL';
 function applyFilters() {
   var rows = document.querySelectorAll('#rtbody tr');
   rows.forEach(function(r) {
     var b = r.querySelector('.badge');
     var sm = (_sf === 'ALL') || (b && b.getAttribute('data-status') === _sf);
-    var qm = !_sq || r.textContent.toLowerCase().indexOf(_sq.toLowerCase()) >= 0;
-    r.style.display = (sm && qm) ? '' : 'none';
+    r.style.display = sm ? '' : 'none';
   });
 }
 function filterStatus(s) {
@@ -294,7 +289,6 @@ function filterStatus(s) {
   if (btn) btn.classList.add('active');
   applyFilters();
 }
-function onSearch(q) { _sq = q; applyFilters(); }
 
 /* ---- Sort current-run table ---- */
 var _sc = -1, _sa = true;
@@ -319,20 +313,6 @@ function sortCol(c) {
 }
 function toggleErr(el) { el.closest('.err-cell').classList.toggle('err-expanded'); }
 
-/* ---- History search ---- */
-var _histQ = '';
-function onHistSearch(q) {
-  _histQ = q.toLowerCase();
-  _refreshHistTable();
-}
-function _refreshHistTable() {
-  document.querySelectorAll('#rhtbody > tr.run-row').forEach(function(r) {
-    var matchQ = (!_histQ || r.textContent.toLowerCase().indexOf(_histQ) >= 0);
-    r.style.display = matchQ ? '' : 'none';
-    var next = r.nextElementSibling;
-    if (next && next.classList.contains('run-detail-row')) next.style.display = 'none';
-  });
-}
 /* ---- Run history row expand ---- */
 function toggleRun(btn, runIdx) {
   var detailRow = document.getElementById('rdr-' + runIdx);
@@ -666,9 +646,6 @@ class HtmlReportGenerator:
       <button id="fb-SKIP"  class="fbtn fa-skip"  onclick="filterStatus('SKIP')">
         Skip ({skipped})
       </button>
-      <input class="search-box" type="text"
-             placeholder="Search tests, modules, patients..."
-             oninput="onSearch(this.value)">
     </div>
 
     <!-- Result table -->
@@ -696,13 +673,6 @@ class HtmlReportGenerator:
   <div class="tab-panel" id="mpanel-history">
 
     {hist_cards_html}
-
-    <!-- History toolbar (search applies across the active page) -->
-    <div class="toolbar" style="margin-bottom:14px">
-      <input class="search-box" type="text"
-             placeholder="Search run ID, date..."
-             oninput="onHistSearch(this.value)">
-    </div>
 
     <!-- Per-page tab strip (50 runs per page, latest first) -->
     {hist_tabs_html}

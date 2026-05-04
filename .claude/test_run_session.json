@@ -127,7 +127,22 @@
       "marker": "acceptance",
       "path": "tests/e2e/acceptance/test_e2e_p14_partial_approve.py",
       "ddt": "test_data/doctor/doctor_actions.json (P14)"
-    }
+    },
+
+    "test_super_user_p1":  { "patient_id": "P1",  "scenario": "Super-user (admin/manager) drives P1 acceptance flow",                "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p2":  { "patient_id": "P2",  "scenario": "Super-user drives P2 3-cycle rejection flow",                          "marker": "rejection",     "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p3":  { "patient_id": "P3",  "scenario": "Super-user drives P3 partial-approve flow",                            "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p4":  { "patient_id": "P4",  "scenario": "Super-user drives P4 acceptance + rectification flow",                 "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p5":  { "patient_id": "P5",  "scenario": "Super-user drives P5 existing-relative acceptance flow",               "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p6":  { "patient_id": "P6",  "scenario": "Super-user drives P6 3-cycle rejection flow",                          "marker": "rejection",     "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p7":  { "patient_id": "P7",  "scenario": "Super-user drives P7 add-relative limit-error flow (FD only)",         "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p8":  { "patient_id": "P8",  "scenario": "Super-user drives P8 new-patient acceptance flow",                      "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p9":  { "patient_id": "P9",  "scenario": "Super-user drives P9 new-patient 3-cycle rejection flow",               "marker": "rejection",     "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p10": { "patient_id": "P10", "scenario": "Super-user drives P10 new-patient partial rejection + rectify flow",    "marker": "rejection",     "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p11": { "patient_id": "P11", "scenario": "Super-user drives P11 duplicate-mobile error flow (FD only)",           "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p12": { "patient_id": "P12", "scenario": "Super-user drives P12 add-new-relative acceptance flow",                "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p13": { "patient_id": "P13", "scenario": "Super-user drives P13 partial-rejection flow",                          "marker": "rejection",     "path": "tests/e2e/super_user/test_super_user_e2e.py" },
+    "test_super_user_p14": { "patient_id": "P14", "scenario": "Super-user drives P14 new-patient partial-approve flow",                "marker": "acceptance",    "path": "tests/e2e/super_user/test_super_user_e2e.py" }
 
   },
 

@@ -54,13 +54,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
      position:sticky;top:0;z-index:500;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 .hdr-left h1{font-size:1.05rem;font-weight:700;letter-spacing:.02em}
 .hdr-left .sub{font-size:.77rem;color:rgba(255,255,255,.52);margin-top:2px}
-.hdr-right{display:flex;gap:24px}
-.hdr-stat{text-align:center}
-.hdr-stat .hs-num{font-size:1.5rem;font-weight:800;line-height:1}
-.hdr-stat .hs-lbl{font-size:.68rem;color:rgba(255,255,255,.5);
-                   text-transform:uppercase;letter-spacing:.08em}
-.hs-green{color:#73d13d}.hs-red{color:#ff7875}.hs-orange{color:#ffd666}
-.hs-grey{color:rgba(255,255,255,.4)}
 
 /* ===== WRAP ===== */
 .wrap{max-width:1500px;margin:0 auto;padding:24px 32px}
@@ -165,10 +158,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,
 .sfbtn.sf-pass.active{background:var(--green);border-color:var(--green)}
 .sfbtn.sf-fail.active{background:var(--red);border-color:var(--red)}
 .sfbtn.sf-notexec.active{background:#8c8c8c;border-color:#8c8c8c}
-.sbar-search{margin-left:auto;padding:4px 13px;border:1px solid #d9d9d9;
-             border-radius:14px;font-size:.8rem;outline:none;min-width:210px;
-             transition:border-color .12s;font-family:inherit}
-.sbar-search:focus{border-color:var(--blue)}
 
 /* ===== FLOW CARD ===== */
 .flow-card{background:var(--surface);border-radius:var(--r);
@@ -417,17 +406,15 @@ function showSessionTab(snum) {
   if (btn) btn.classList.add('active');
   if (pnl) pnl.classList.add('active');
   /* reset filters when switching sessions */
-  _status = 'ALL'; _search = '';
+  _status = 'ALL';
   document.querySelectorAll('.sfbtn').forEach(function(b) { b.classList.remove('active'); });
   var allBtn = document.getElementById('psf-ALL');
   if (allBtn) allBtn.classList.add('active');
-  var searchBox = document.querySelector('.sbar-search');
-  if (searchBox) searchBox.value = '';
   applyPhaseFilters();
 }
 
 /* ---- Status filter (applies to active session panel only) ---- */
-var _status = 'ALL', _search = '';
+var _status = 'ALL';
 function filterStatus(s) {
   _status = s;
   document.querySelectorAll('.sfbtn').forEach(function(b) { b.classList.remove('active'); });
@@ -435,7 +422,6 @@ function filterStatus(s) {
   if (btn) btn.classList.add('active');
   applyPhaseFilters();
 }
-function onSearch(q) { _search = q.toLowerCase(); applyPhaseFilters(); }
 
 function applyPhaseFilters() {
   var activePanel = document.querySelector('.ptab-panel.active');
@@ -446,7 +432,6 @@ function applyPhaseFilters() {
       var b = tr.querySelector('.pbadge');
       if (!b || b.getAttribute('data-ps') !== _status) ok = false;
     }
-    if (ok && _search) ok = tr.textContent.toLowerCase().indexOf(_search) >= 0;
     tr.style.display = ok ? '' : 'none';
   });
 }
@@ -487,28 +472,6 @@ function sortPhaseCol(tblId, col) {
   });
   applyPhaseFilters();
 }
-
-/* ---- Chart.js donut for batch totals in header ---- */
-document.addEventListener('DOMContentLoaded', function() {
-  var el = document.getElementById('phaseDonut');
-  if (el && window.Chart) {
-    new Chart(el.getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Passed', 'Failed', 'Not Executed'],
-        datasets: [{
-          data: [_PH_PASS, _PH_FAIL, _PH_NOTEXEC],
-          backgroundColor: ['#52c41a', '#ff4d4f', '#d9d9d9'],
-          borderWidth: 2, borderColor: '#fff'
-        }]
-      },
-      options: {
-        cutout: '68%',
-        plugins: { legend: { position: 'bottom', labels: { padding: 10, font: { size: 11 } } } }
-      }
-    });
-  }
-});
 """
 
 
@@ -601,23 +564,6 @@ class PatientPhaseHtmlGenerator:
         if not batch_sessions:
             return self._empty_html(now)
 
-        # --- Batch-wide totals (shown in header) ---
-        # Reconciles each recorded entry against flow_phase_order so phases
-        # that never ran (test aborted early) are counted as NOT EXECUTED.
-        b_total = b_pass = b_fail = b_notexec = 0
-        for sess in batch_sessions:
-            for tn, patient_map in sess.get("phase_data", {}).items():
-                p, f, n, t = self._count_phases(tn, patient_map)
-                b_pass    += p
-                b_fail    += f
-                b_notexec += n
-                b_total   += t
-
-        batch_pass_rate = round(b_pass / b_total * 100, 1) if b_total else 0.0
-        pr_cls = "hs-green" if batch_pass_rate >= 90 else (
-            "hs-orange" if batch_pass_rate >= 60 else "hs-red"
-        )
-
         # --- Active tab selection ---
         snums_present = {s.get("session_num", 0) for s in batch_sessions}
         default_active = (
@@ -642,12 +588,6 @@ class PatientPhaseHtmlGenerator:
             )
             panels_html += self._session_panel(sess, snum, is_active)
 
-        js_vars = (
-            f"var _PH_PASS = {b_pass};\n"
-            f"var _PH_FAIL = {b_fail};\n"
-            f"var _PH_NOTEXEC = {b_notexec};\n"
-        )
-
         return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -668,42 +608,17 @@ class PatientPhaseHtmlGenerator:
       &nbsp;&mdash;&nbsp; Generated: {escape(now)}
     </div>
   </div>
-  <div class="hdr-right">
-    <div class="hdr-stat">
-      <div class="hs-num {pr_cls}">{batch_pass_rate}%</div>
-      <div class="hs-lbl">Phase Pass</div>
-    </div>
-    <div class="hdr-stat">
-      <div class="hs-num hs-green">{b_pass}</div>
-      <div class="hs-lbl">Passed</div>
-    </div>
-    <div class="hdr-stat">
-      <div class="hs-num hs-red">{b_fail}</div>
-      <div class="hs-lbl">Failed</div>
-    </div>
-    <div class="hdr-stat">
-      <div class="hs-num hs-grey">{b_notexec}</div>
-      <div class="hs-lbl">Not Exec</div>
-    </div>
-    <div class="hdr-stat">
-      <div class="hs-num" style="color:#ffd666">{len(batch_sessions)}</div>
-      <div class="hs-lbl">Sessions</div>
-    </div>
-  </div>
 </header>
 
 <!-- ===== CONTENT ===== -->
 <div class="wrap">
 
-  <!-- Global status filter + search (above tabs, filters active session) -->
+  <!-- Global status filter (above tabs, filters active session) -->
   <div class="global-filter-bar">
     <button id="psf-ALL"          class="sfbtn active"     onclick="filterStatus('ALL')">All</button>
     <button id="psf-PASSED"       class="sfbtn sf-pass"    onclick="filterStatus('PASSED')">&#10003; Passed</button>
     <button id="psf-FAILED"       class="sfbtn sf-fail"    onclick="filterStatus('FAILED')">&#10007; Failed</button>
     <button id="psf-NOT EXECUTED" class="sfbtn sf-notexec" onclick="filterStatus('NOT EXECUTED')">&#9711; Not Executed</button>
-    <input class="sbar-search" type="text"
-           placeholder="Search patient, section, flow..."
-           oninput="onSearch(this.value)">
   </div>
 
   <!-- Session tabs -->
@@ -721,7 +636,6 @@ class PatientPhaseHtmlGenerator:
 </div>
 
 <script>
-{js_vars}
 {_PHASE_JS}
 </script>
 </body>

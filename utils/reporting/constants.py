@@ -180,6 +180,42 @@ FLOW_REGISTRY: Dict[str, Dict] = {
 }
 
 
+# =============================================================================
+# SUPER-USER FLOW_REGISTRY  –  one entry per patient (P1..P14)
+# =============================================================================
+#: Each `test_super_user_p<N>` mirrors the canonical patient's phase_order so
+#: the patient phase report renders identically whether a run is driven by
+#: per-role users or by an admin/manager super-user. Phase labels MUST match
+#: the canonical entry exactly — the manifest reuses the same labels.
+def _register_super_user_flows() -> None:
+    canonical_map = {
+        "test_super_user_p1":  ("test_e2e_acceptance",                 "P1 Super-User Acceptance"),
+        "test_super_user_p2":  ("test_e2e_p2_rejection",               "P2 Super-User Rejection"),
+        "test_super_user_p3":  ("test_e2e_p3_partial_approve",         "P3 Super-User Partial Approve"),
+        "test_super_user_p4":  ("test_e2e_p4_rectification",           "P4 Super-User Rectification"),
+        "test_super_user_p5":  ("test_e2e_p5_relative_acceptance",     "P5 Super-User Relative Acceptance"),
+        "test_super_user_p6":  ("test_e2e_p6_rejection",               "P6 Super-User Rejection"),
+        "test_super_user_p7":  ("test_e2e_p7_limit_error",             "P7 Super-User Limit Error"),
+        "test_super_user_p8":  ("test_e2e_p8_new_patient_acceptance",  "P8 Super-User New Patient Acceptance"),
+        "test_super_user_p9":  ("test_e2e_p9_new_patient_rejection",   "P9 Super-User New Patient Rejection"),
+        "test_super_user_p10": ("test_e2e_p10_new_patient_partial",    "P10 Super-User New Patient Partial"),
+        "test_super_user_p11": ("test_e2e_p11_duplicate_mobile_error", "P11 Super-User Duplicate Mobile"),
+        "test_super_user_p12": ("test_e2e_p12_relative_acceptance",    "P12 Super-User New Relative"),
+        "test_super_user_p13": ("test_e2e_p13_partial_rejection",      "P13 Super-User Partial Rejection"),
+        "test_super_user_p14": ("test_e2e_p14_partial_approve",        "P14 Super-User Partial Approve"),
+    }
+    for super_key, (canon_key, label) in canonical_map.items():
+        canon = FLOW_REGISTRY.get(canon_key, {})
+        FLOW_REGISTRY[super_key] = {
+            "label":       label,
+            "short":       super_key.replace("_", ""),
+            "phase_order": list(canon.get("phase_order", [])),
+        }
+
+
+_register_super_user_flows()
+
+
 def flow_label(test_name: str) -> str:
     """Return human-readable label for a test; falls back to title-cased name."""
     return FLOW_REGISTRY.get(test_name, {}).get(
