@@ -648,7 +648,6 @@
     {
       "patient_id_ref": "P13",
       "scenario": "Reject 24h urine at LT (initial visit). re_cycles[0]: 24h urine fixed, save all 7. Local date 17/04/2026.",
-      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
       "sample_actions": [
         { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
         { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" },
@@ -665,7 +664,6 @@
       "re_cycles": [
         {
           "_note": "Phase: 24h urine recollected and re-accepted; save all 7 tests for first time. Local date 17/04/2026.",
-          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
           "sample_actions": [
             { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "refresh_then_accept" }
           ],

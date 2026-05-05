@@ -471,7 +471,6 @@
     {
       "patient_id_ref": "P13",
       "scenario": "Rejection at accession (Serum) + LT (24h urine); doctor approves all 7. Local date 17/04/2026.",
-      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
       "sub_departments": [
         {
           "sub_dept_name": "Hematology",

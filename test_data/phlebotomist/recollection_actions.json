@@ -79,13 +79,11 @@
       "patient_id_ref": "P13",
       "cycles": [
         {
-          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
           "samples": [
             { "sub_department": "Clinical Chemistry", "sample_name": "Serum", "action": "toggle_on" }
           ]
         },
         {
-          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
           "samples": [
             { "sub_department": "Clinical Chemistry", "sample_name": "24-hour urine", "action": "toggle_on" }
           ]

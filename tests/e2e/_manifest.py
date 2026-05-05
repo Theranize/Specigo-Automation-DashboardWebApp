@@ -226,17 +226,17 @@ def _build_rejection_3cycle(pid: str, *, a: str, b: str, c: str, d: str, final: 
         r = execute_accession_flow(page, ac_e)
         if r.get("error_found") or not r.get("completed"):
             return r
-        return execute_reassignment_flow(page, re_e["cycles"][0])
+        return execute_reassignment_flow(page, _with_pid(re_e["cycles"][0], pid))
 
     def _lt_save_all_runner(page) -> dict:
-        rc1 = lt_e["re_cycles"][0]
+        rc1 = _with_pid(lt_e["re_cycles"][0], pid)
         ls = execute_labtech_search(page, rc1)
         if ls.get("error_found") or not ls.get("completed"):
             return ls
         return execute_labtech_tests(page, rc1)
 
     def _lt_save_final_runner(page) -> dict:
-        rc2 = lt_e["re_cycles"][1]
+        rc2 = _with_pid(lt_e["re_cycles"][1], pid)
         ls = execute_labtech_search(page, rc2)
         if ls.get("error_found") or not ls.get("completed"):
             return ls
@@ -250,15 +250,15 @@ def _build_rejection_3cycle(pid: str, *, a: str, b: str, c: str, d: str, final: 
         PhaseStep(f"Accession (Reject {a})",        "acc",    "primary",   "accession",
                   _acc_reject_then_reassign),
         PhaseStep(f"Phlebotomist (Recollect {a})",  "phlebo", "recollect", "phlebotomist",
-                  lambda page: execute_recollection_flow(page, rc_e["cycles"][0])),
+                  lambda page: execute_recollection_flow(page, _with_pid(rc_e["cycles"][0], pid))),
         PhaseStep(f"Accession (Re-accept {a})",     "acc",    "primary",   "accession",
                   lambda page: execute_accession_flow(page, _with_pid(ac_e["re_accept"][0], pid))),
         PhaseStep(f"Lab Technician (Reject {b})",   "labt",   "primary",   "lab_technician",
                   lambda page: execute_labtech_search(page, lt_e)),
         PhaseStep(f"Accession (Reassign {b})",      "acc",    "reassign",  "accession",
-                  lambda page: execute_reassignment_flow(page, re_e["cycles"][1])),
+                  lambda page: execute_reassignment_flow(page, _with_pid(re_e["cycles"][1], pid))),
         PhaseStep(f"Phlebotomist (Recollect {b})",  "phlebo", "recollect", "phlebotomist",
-                  lambda page: execute_recollection_flow(page, rc_e["cycles"][1])),
+                  lambda page: execute_recollection_flow(page, _with_pid(rc_e["cycles"][1], pid))),
         PhaseStep(f"Accession (Re-accept {b})",     "acc",    "primary",   "accession",
                   lambda page: execute_accession_flow(page, _with_pid(ac_e["re_accept"][1], pid))),
         PhaseStep("Lab Technician (Save All)",      "labt",   "primary",   "lab_technician",
@@ -266,9 +266,9 @@ def _build_rejection_3cycle(pid: str, *, a: str, b: str, c: str, d: str, final: 
         PhaseStep(f"Doctor (Resample {c})",         "doc",    "primary",   "doctor",
                   lambda page: execute_doctor_flow(page, dc_e)),
         PhaseStep(f"Accession (Reassign {d})",      "acc",    "reassign",  "accession",
-                  lambda page: execute_reassignment_flow(page, re_e["cycles"][2])),
+                  lambda page: execute_reassignment_flow(page, _with_pid(re_e["cycles"][2], pid))),
         PhaseStep(f"Phlebotomist (Recollect {d})",  "phlebo", "recollect", "phlebotomist",
-                  lambda page: execute_recollection_flow(page, rc_e["cycles"][2])),
+                  lambda page: execute_recollection_flow(page, _with_pid(rc_e["cycles"][2], pid))),
         PhaseStep(f"Accession (Re-accept {d})",     "acc",    "primary",   "accession",
                   lambda page: execute_accession_flow(page, _with_pid(ac_e["re_accept"][2], pid))),
         PhaseStep(f"Lab Technician (Save {c})",     "labt",   "primary",   "lab_technician",
@@ -316,7 +316,7 @@ def _build_p10(pid: str) -> List[PhaseStep]:
         r = execute_accession_flow(page, ac_e)
         if r.get("error_found") or not r.get("completed"):
             return r
-        return execute_reassignment_flow(page, re_e["cycles"][0])
+        return execute_reassignment_flow(page, _with_pid(re_e["cycles"][0], pid))
 
     def _lt_runner(page) -> dict:
         ls = execute_labtech_search(page, lt_e)
@@ -332,7 +332,7 @@ def _build_p10(pid: str) -> List[PhaseStep]:
         PhaseStep("Accession (Reject 24h)",       "acc",    "primary",   "accession",
                   _acc_reject_then_reassign),
         PhaseStep("Phlebotomist (Recollect 24h)", "phlebo", "recollect", "phlebotomist",
-                  lambda page: execute_recollection_flow(page, rc_e["cycles"][0])),
+                  lambda page: execute_recollection_flow(page, _with_pid(rc_e["cycles"][0], pid))),
         PhaseStep("Accession (Re-accept 24h)",    "acc",    "primary",   "accession",
                   lambda page: execute_accession_flow(page, _with_pid(ac_e["re_accept"][0], pid))),
         PhaseStep("Lab Technician",               "labt",   "primary",   "lab_technician",
@@ -368,10 +368,10 @@ def _build_p13(pid: str) -> List[PhaseStep]:
         r = execute_accession_flow(page, ac_e)
         if r.get("error_found") or not r.get("completed"):
             return r
-        return execute_reassignment_flow(page, re_e["cycles"][0])
+        return execute_reassignment_flow(page, _with_pid(re_e["cycles"][0], pid))
 
     def _lt_save_all_runner(page) -> dict:
-        rc1 = lt_e["re_cycles"][0]
+        rc1 = _with_pid(lt_e["re_cycles"][0], pid)
         ls = execute_labtech_search(page, rc1)
         if ls.get("error_found") or not ls.get("completed"):
             return ls
@@ -385,15 +385,15 @@ def _build_p13(pid: str) -> List[PhaseStep]:
         PhaseStep("Accession (Reject Serum)",        "acc",    "primary",   "accession",
                   _acc_reject_then_reassign),
         PhaseStep("Phlebotomist (Recollect Serum)",  "phlebo", "recollect", "phlebotomist",
-                  lambda page: execute_recollection_flow(page, rc_e["cycles"][0])),
+                  lambda page: execute_recollection_flow(page, _with_pid(rc_e["cycles"][0], pid))),
         PhaseStep("Accession (Re-accept Serum)",     "acc",    "primary",   "accession",
                   lambda page: execute_accession_flow(page, _with_pid(ac_e["re_accept"][0], pid))),
         PhaseStep("Lab Technician (Reject 24h)",     "labt",   "primary",   "lab_technician",
                   lambda page: execute_labtech_search(page, lt_e)),
         PhaseStep("Accession (Reassign 24h)",        "acc",    "reassign",  "accession",
-                  lambda page: execute_reassignment_flow(page, re_e["cycles"][1])),
+                  lambda page: execute_reassignment_flow(page, _with_pid(re_e["cycles"][1], pid))),
         PhaseStep("Phlebotomist (Recollect 24h)",    "phlebo", "recollect", "phlebotomist",
-                  lambda page: execute_recollection_flow(page, rc_e["cycles"][1])),
+                  lambda page: execute_recollection_flow(page, _with_pid(rc_e["cycles"][1], pid))),
         PhaseStep("Accession (Re-accept 24h)",       "acc",    "primary",   "accession",
                   lambda page: execute_accession_flow(page, _with_pid(ac_e["re_accept"][1], pid))),
         PhaseStep("Lab Technician (Save All)",       "labt",   "primary",   "lab_technician",
