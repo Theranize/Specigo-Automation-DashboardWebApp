@@ -22,18 +22,31 @@ def browser_instance(pytestconfig):
     urls     = load_yaml(URLS_PATH)
     env      = pytestconfig.getoption("--env")   # "dev" | "staging"
     base_url = urls[env]["base_url"]
+    headless = config.get("headless", False)
     with sync_playwright() as p:
+        # In headed mode --start-maximized stretches Chromium to the screen
+        # so the page renders at full resolution. In headless that arg is a
+        # no-op and Chromium falls back to its default 800x600 viewport, which
+        # crops AntD modals/sidebars and breaks layout-sensitive locators.
+        # Force an explicit 1920x1080 window+viewport when headless.
+        launch_args = (
+            ["--window-size=1920,1080"] if headless else ["--start-maximized"]
+        )
         browser = p.chromium.launch(
-            headless=config.get("headless", False),
+            headless=headless,
             slow_mo=config.get("slow_mo", 50),
-            args=["--start-maximized"],
+            args=launch_args,
         )
         VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
-        context = browser.new_context(
-            no_viewport=True,
-            record_video_dir=str(VIDEOS_DIR),
-            record_video_size={"width": 1920, "height": 1080},
-        )
+        context_kwargs: dict = {
+            "record_video_dir": str(VIDEOS_DIR),
+            "record_video_size": {"width": 1920, "height": 1080},
+        }
+        if headless:
+            context_kwargs["viewport"] = {"width": 1920, "height": 1080}
+        else:
+            context_kwargs["no_viewport"] = True
+        context = browser.new_context(**context_kwargs)
         context.set_default_timeout(config.get("timeout", 30000))
         context.base_url = base_url
         try:

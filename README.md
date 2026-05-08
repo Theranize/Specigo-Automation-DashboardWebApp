@@ -194,16 +194,27 @@ run_regression labtech dev       :: explicit dev
 
 ### Parallel notes
 
-- **Hard cap: 14 workers.** Each E2E test maps to a unique patient (`P1`–
-  `P14`) in `.claude/test_run_session.json`; running the same test on two
-  workers would collide on patient data. Beyond 14, xdist still spawns
-  workers but they sit idle.
+- **Same-mobile serialisation.** Several patients share a backend mobile
+  (e.g. P1, P2, P3, P4, P6, P12, P13 all live under Aditya `7777777777`).
+  Concurrent tests on the same mobile would race on the patient record on
+  the dev server. The autouse `_mobile_serialise` fixture in `conftest.py`
+  acquires a per-mobile cross-process file lock (`utils/login_lock.py`
+  `mobile_lock`) for the duration of each test, so any worker can pick up
+  any test under `--dist worksteal` and same-mobile tests serialise on the
+  lock instead of on a static worker pin.
+- **Per-role login lock.** A separate cross-process lock (`login_lock`)
+  serialises the login submit per role (`frontdesk_user`, `phlebotomist`,
+  …) — held only during `execute_login(...)`, released before work phases
+  so workers stay parallel.
+- **Hard cap: 14 workers.** There are 14 unique E2E tests today; beyond
+  14, xdist still spawns workers but they sit idle.
 - **Headed-mode practical cap: 3–4** visible Chromium windows on a 1080p
   monitor without overlap. Past that, the windows steal focus from each
   other and the visual debugging value is lost.
 - **For 6+ workers**, switch `headless: true` in `config/test_config.yaml`
   first. Headless frees ~30–40 % CPU/GPU per browser and lets `auto` (=
-  CPU count) be useful.
+  CPU count) be useful. Note: the Print Bill modal popup is unreliable in
+  headless on this app, so headed remains the supported mode for full E2E.
 - xdist tags every test line with `[gw0]`…`[gwN-1]` in the console output,
   so you can still see which worker is doing what even when running
   headless.

@@ -29,9 +29,31 @@ MNC standard: type hints, docstrings, section comments.
 """
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Optional
 
 from utils.error_detector import detect_ui_errors
+
+
+# Toast/banner texts that the structured detector occasionally surfaces but
+# which are actually success/info messages from a just-completed action. Most
+# of these slip through because the dev backend emits them via wrappers that
+# don't carry an `ant-message-success` class fragment, so `_is_inside_non_error`
+# in error_detector.py can't filter them by ancestor class. Tracking them as
+# text patterns here is the lower-risk place: it only suppresses a known
+# success message, never a real validation/error string.
+_SUCCESS_TEXT_RE = re.compile(
+    r"successfully\s+(completed|saved|submitted|approved|rejected|accepted|"
+    r"recollected|rectified|updated|created|registered|reassigned)|"
+    r"(completed|saved|submitted|approved|rejected|accepted|"
+    r"recollected|rectified|updated|created|registered|reassigned)"
+    r"\s+successfully|"
+    r"^\s*(Sample|Test|Report|Recollection|Reassignment|Rectification|Patient)"
+    r"\s+(Rejected|Accepted|Approved|Saved|Submitted|Rectified|"
+    r"Recollected|Reassigned|Created|Updated|Registered|Successful|Completed)"
+    r"\.?\s*$",
+    re.IGNORECASE,
+)
 
 
 # =============================================================================
@@ -66,6 +88,12 @@ def check_ui_error(
     """
     err = detect_ui_errors(page)
     if err is None:
+        return False
+
+    # Success-message safety net: detector occasionally surfaces toasts like
+    # "Sample Rejected" or "Test rectification successfully completed" that
+    # are actually the just-completed action's success notification. Skip.
+    if err.text and _SUCCESS_TEXT_RE.search(err.text):
         return False
 
     result["error_found"]   = True

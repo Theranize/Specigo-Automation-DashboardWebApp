@@ -248,8 +248,10 @@ def _handle_save(
     for param_name, value in parameters.items():
         filled = lp.fill_parameter(row, param_name, value)
         if not filled:
+            diag = getattr(lp, "last_param_fill_diag", None)
+            detail = f" [{diag}]" if diag else ""
             entry["error"] = (
-                f"Parameter fill failed: {test_name} → {param_name}"
+                f"Parameter fill failed: {test_name} → {param_name}{detail}"
             )
             return entry
 

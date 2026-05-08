@@ -66,7 +66,18 @@ def patient_catalog() -> Dict[str, dict]:
     if "patients" not in _CATALOG_CACHE:
         session = load_json(_ROOT / ".claude/test_run_session.json")
         _CATALOG_CACHE["patients"] = session.get("patients", {}) or {}
+        _CATALOG_CACHE["patient_map"] = session.get("_patient_map", {}) or {}
     return _CATALOG_CACHE["patients"]
+
+
+def mobile_for(pid: str) -> str:
+    """Backend mobile for a patient — consumed by the `_mobile_serialise`
+    autouse fixture in `conftest.py` to acquire a per-mobile runtime lock,
+    so same-mobile tests serialise across xdist workers under
+    `--dist worksteal`. Returns "" if the pid has no mapped mobile."""
+    if "patient_map" not in _CATALOG_CACHE:
+        patient_catalog()  # populates _CATALOG_CACHE["patient_map"]
+    return (_CATALOG_CACHE.get("patient_map", {}).get(pid, {}).get("mobile") or "").strip()
 
 
 def patients_for_file(primary_file: str) -> List[str]:

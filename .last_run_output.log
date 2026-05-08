@@ -1,0 +1,96 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- D:\automation\playwright\Test\Scripts\python.exe
+cachedir: .pytest_cache
+metadata: {'Python': '3.14.2', 'Platform': 'Windows-11-10.0.26200-SP0', 'Packages': {'pytest': '9.0.2', 'pluggy': '1.6.0'}, 'Plugins': {'allure-pytest': '2.15.3', 'base-url': '2.1.0', 'html': '4.2.0', 'json-report': '1.5.0', 'metadata': '3.1.1', 'playwright': '0.7.2', 'xdist': '3.8.0'}, 'Base URL': ''}
+rootdir: D:\specigo-automation\Specigo-Automation-DashboardWebApp
+configfile: pytest.ini
+plugins: allure-pytest-2.15.3, base-url-2.1.0, html-4.2.0, json-report-1.5.0, metadata-3.1.1, playwright-0.7.2, xdist-3.8.0
+created: 5/5 workers
+5 workers [15 items]
+
+scheduling tests via WorkStealingScheduling
+
+tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P10] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P1] 
+tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P2] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P5] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P11] 
+[gw2] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P11] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P12] 
+[gw0] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P1] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P3] 
+[gw1] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P5] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P7] 
+[gw2] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P12] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P14] 
+[gw1] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P7] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P8] 
+[gw2] FAILED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P14] 
+[gw4] PASSED tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P10] 
+tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P13] 
+tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P9] 
+[gw0] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P3] 
+tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P4] 
+[gw3] PASSED tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P2] 
+tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P6] 
+[gw1] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P8] 
+tests/e2e/super_user/test_super_user_e2e.py::test_super_user_e2e[NOTSET] 
+[gw1] SKIPPED tests/e2e/super_user/test_super_user_e2e.py::test_super_user_e2e[NOTSET] 
+[gw4] PASSED tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P13] 
+[gw0] PASSED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P4] 
+[gw2] PASSED tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P9] 
+[gw3] PASSED tests/e2e/rejection/test_e2e_rejection.py::test_e2e_rejection[P6] 
+==================================================================
+  [SESSION SYSTEM]  Session #84 registered successfully.
+  Batch 9 of reports  (sessions 81-90).
+  Run ID   : Run_Sp_0000000084
+  Started  : 2026-05-08T13:45:29   Ended: 2026-05-08T14:11:30
+  Tests    : test_e2e_acceptance[P11], test_e2e_acceptance[P12], test_e2e_acceptance[P14], test_e2e_acceptance[P1], test_e2e_acceptance[P3], test_e2e_acceptance[P4], test_e2e_acceptance[P5], test_e2e_acceptance[P7], test_e2e_acceptance[P8], test_e2e_rejection[P10], test_e2e_rejection[P13], test_e2e_rejection[P2], test_e2e_rejection[P6], test_e2e_rejection[P9]
+==================================================================
+  [SESSION SYSTEM]  Phase report (Session 84) -> reports\patient_phase_report9.html
+  [SESSION SYSTEM]  Summary report (Batch 9)          -> reports\summary_report.html
+
+  [allure generate] SKIPPED -- allure CLI not found in PATH.
+  Install: https://allurereport.org/docs/gettingstarted-installation/
+  Then run manually:
+    allure generate reports\allure-results -o reports\allure-report --clean
+
+------------------------------------------------------------------
+  TEST SESSION COMPLETE  (Session #84)
+  Batch 9 of reports (sessions 81-90)
+  Passed :   13  Failed :    1  Errors :    0  Skipped:    0  Pass Rate: 92.9%
+  Total  : 14   Duration: 1561.5s
+  Summary Reports:
+    HTML -> reports\summary_report.html
+    JSON -> reports\summary_report.json
+    CSV  -> reports\summary_report.csv
+    Phase Report (Session 84) -> reports\patient_phase_report9.html
+  Allure Report:
+    Results -> reports\allure-results  (raw)
+    HTML    -> (not generated)  (open in browser)
+  Other Reports:
+    Pytest HTML -> reports/html/pytest_report.html
+    Pytest JSON -> reports/json/pytest_report.json
+  Artifacts:
+    Success  -> artifacts\success  ({pid}-{flow}-{phase}.png)
+    Failures -> artifacts\failures  ({pid}-{flow}-{phase}-{issue}{seq}.png)
+    Traces   -> artifacts/traces/
+    Videos   -> artifacts/videos/  ({patient}-{flowname}.webm)
+------------------------------------------------------------------
+
+
+
+================================== FAILURES ===================================
+__________________________ test_e2e_acceptance[P14] ___________________________
+[gw2] win32 -- Python 3.14.2 D:\automation\playwright\Test\Scripts\python.exe
+tests\e2e\acceptance\test_e2e_acceptance.py:37: in test_e2e_acceptance
+    run_patient(page, login_as, pid)
+tests\e2e\_runner.py:71: in run_patient
+    pytest.fail(f"[{pid}] {step.label}: {r.get('error_message')}")
+E   Failed: [P14] Front Desk: Patient Registered successfully
+--------------------------------- JSON report ---------------------------------
+report saved to: reports/json/pytest_report.json
+- Generated html report: file:///D:/specigo-automation/Specigo-Automation-DashboardWebApp/reports/html/pytest_report.html -
+=========================== short test summary info ===========================
+FAILED tests/e2e/acceptance/test_e2e_acceptance.py::test_e2e_acceptance[P14] - Failed: [P14] Front Desk: Patient Registered successfully
+============ 1 failed, 13 passed, 1 skipped in 1562.50s (0:26:02) =============

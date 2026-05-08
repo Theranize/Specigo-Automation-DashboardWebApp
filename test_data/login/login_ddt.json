@@ -9,12 +9,12 @@
     "manager":        { "username": "manager_user",    "password": "test@123" }
   },
   "staging": {
-    "front_desk":     { "username": "<staging_fd_user>",    "password": "<staging_password>" },
-    "phlebotomist":   { "username": "<staging_phlebo>",     "password": "<staging_password>" },
-    "accession":      { "username": "<staging_acc>",        "password": "<staging_password>" },
-    "lab_technician": { "username": "<staging_lt>",         "password": "<staging_password>" },
-    "doctor":         { "username": "<staging_doc>",        "password": "<staging_password>" },
-    "admin":          { "username": "<staging_admin>",      "password": "<staging_password>" },
-    "manager":        { "username": "<staging_manager>",    "password": "<staging_password>" }
+    "front_desk":     { "username": "front_user",    "password": "test@123" },
+    "phlebotomist":   { "username": "phleboto_user",     "password": "test@123" },
+    "accession":      { "username": "acc_user",        "password": "test@123" },
+    "lab_technician": { "username": "labt_user",         "password": "test@123" },
+    "doctor":         { "username": "doc_user",        "password": "test@123" },
+    "admin":          { "username": "admin_user",      "password": "test@123" },
+    "manager":        { "username": "manager_user",    "password": "test@123" }
   }
 }

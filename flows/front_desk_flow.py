@@ -103,6 +103,18 @@ def execute_front_desk_registration(
 
             if relative.get("relation"):
                 fd.select_relation(relative["relation"])
+            elif expected_err.get("should_appear"):
+                # Expected an error toast (e.g. P7's 10-patient limit) that
+                # didn't appear — likely a parallel state race on the mobile.
+                # Fail with the expected-error context instead of cascading
+                # into "Please select relation" via an empty form submit.
+                result["error_found"] = True
+                result["error_message"] = (
+                    f"Expected error '{expected_err.get('message')}' did not "
+                    f"appear after click_add_relative; cannot proceed without "
+                    f"relation data."
+                )
+                return result
 
     if intent["search_before_add"]:
         auto_filled_mobile = fd.get_mobile_value()
@@ -171,6 +183,15 @@ def execute_front_desk_registration(
     error = fd.detect_error()
     if error:
         return _set_error(result, error, expected_err)
+
+    # Let the post-submit modal finish wiring up before triggering the
+    # popup-bound Print Bill click. Without this, the popup-page event
+    # occasionally fires before its listener attaches under worksteal load.
+    try:
+        page.wait_for_load_state("networkidle", timeout=15000)
+    except Exception:
+        pass
+    fd.wait_for_idle(1)
 
     fd.click_print_bill()
     fd.click_print_barcode()

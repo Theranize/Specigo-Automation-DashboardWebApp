@@ -190,39 +190,24 @@ def pytest_configure(config: pytest.Config) -> None:
     _validate_super_user_options(config)
 
 
-# --- xdist grouping by patient mobile ---
-# Tests that share the same backend mobile number cannot run in parallel —
-# they read/write the same patient record on the dev server. Tag each test
-# with `xdist_group("mobile-<n>")` so xdist's --dist loadgroup distribution
-# pins same-mobile tests to the same worker (sequential within the group,
-# parallel across groups). Mapping comes from .claude/test_run_session.json.
-
-def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
-    """Apply xdist_group markers based on each e2e test's backend mobile.
-
-    All E2E test functions today are parametrized on patient ID — the
-    parametrize id is the literal `P<N>` token in `item.name` (e.g.
-    `test_e2e_acceptance[P1]`, `test_super_user_e2e[P2]`). Extract that
-    `P<N>`, look up its mobile in `_patient_map`, and pin same-mobile tests
-    to the same xdist worker via `xdist_group("mobile-<n>")`. Tests with no
-    `[P<N>]` parametrize id (regression, smoke) fall back to default load
-    distribution unchanged.
-    """
-    try:
-        session_map = json.loads(
-            (Path(".claude") / "test_run_session.json").read_text(encoding="utf-8")
-        )
-    except (OSError, ValueError):
-        return  # missing/malformed registry → skip grouping, fall back to default load
-    patients = session_map.get("_patient_map", {}) or {}
-    for item in items:
-        m = re.search(r"\[(P\d+)\]", item.name)
-        if not m:
-            continue
-        pid    = m.group(1)
-        mobile = (patients.get(pid) or {}).get("mobile") or ""
-        if mobile:
-            item.add_marker(pytest.mark.xdist_group(f"mobile-{mobile}"))
+# --- Same-mobile concurrent execution ---
+# Tests sharing a backend mobile (e.g. P1/P2/P3/P4/P6/P12/P13 all on Aditya
+# 7777777777) used to serialise through a `_mobile_serialise` autouse fixture
+# wrapping `mobile_lock` (utils/login_lock.py). That left workers idle for
+# ~28 min while one worker drained the Aditya queue (autouse fixtures run
+# BEFORE the browser fixture, so blocked workers had no browser open).
+#
+# We now allow concurrent same-mobile execution and rely on each phase
+# disambiguating *its own* report by the unique sample_id captured from the
+# FD barcode modal (`runtime_state.add_sample` in `flows/front_desk_flow.py`):
+#   - phlebo/accession `find_sample_block` already match by sample_id
+#   - doctor `open_report_entry` matches by sample_id (fallback rows.first)
+#   - accession `find_sample_block_by_name` (recollection) takes a
+#     `preferred_sample_id` hint
+# Login serialisation (`login_lock`) is unchanged — still required to
+# prevent the dev backend rejecting concurrent same-role logins.
+# `mobile_lock` and `mobile_for` remain available as utilities for any
+# narrowly-scoped future use, but are not currently wired into any fixture.
 
 
 def _validate_super_user_options(config: pytest.Config) -> None:

@@ -87,12 +87,25 @@ def _process_sample_rule(
         state_key = f"new_id::{rule['sample']}::{rule['sub_department']}"
         new_id = runtime_state.get_value(state_key)
 
+        # Pass the original sample_id (pre-recollection) as a preferred hint
+        # to disambiguate when concurrent same-mobile tests show overlapping
+        # rows. The original id may still appear in the row text even after
+        # recollection generated a new id.
+        original = _match_runtime_sample(
+            samples, rule["sample"], rule["sub_department"]
+        )
+        original_id = original["id"] if original else None
+
         if new_id:
             block = ap.find_sample_block(rule["sample"], new_id)
             if not block:
-                block = ap.find_sample_block_by_name(rule["sample"])  # fallback
+                block = ap.find_sample_block_by_name(
+                    rule["sample"], preferred_sample_id=original_id,
+                )
         else:
-            block = ap.find_sample_block_by_name(rule["sample"])
+            block = ap.find_sample_block_by_name(
+                rule["sample"], preferred_sample_id=original_id,
+            )
 
         if not block:
             entry["error"] = (

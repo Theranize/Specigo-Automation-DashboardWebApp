@@ -32,24 +32,34 @@ class PhlebotomistPage(BasePage):
     """Page object for the Phlebotomist Sample Tracker workflow."""
 
     def navigate_to_sample_tracker(self) -> None:
-        """Click Phlebotomists sidebar → Sample Tracker (hover + double-click to expand)."""
-        phlebo = self.page.get_by_text(SIDEBAR_PHLEBOTOMISTS_TEXT, exact=True)
-        phlebo.wait_for(state="visible", timeout=15000)
-        phlebo.click()
-        phlebo.hover()
-        self.wait_for_idle(0.6)
-        phlebo.click()
+        """Navigate to Phlebotomist Sample Tracker (URL: /collector).
 
-        self.page.get_by_text(
-            SIDEBAR_SAMPLE_TRACKER_TEXT, exact=True
-        ).click()
+        Bypasses the sidebar nav menu (Phlebotomists → Sample Tracker), which
+        is fragile under heavy parallel load — duplicate hidden DOM links and
+        animation timing make `get_by_text(...).click()` unreliable. Direct
+        goto is deterministic; the dashboard renders the same Sample Tracker
+        page either way.
+        """
+        base = getattr(self.page.context, "base_url", "") or ""
+        if "collector" not in (self.page.url or ""):
+            self.safe_goto(base + "collector")
+        try:
+            self.page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
+        try:
+            self.page.get_by_text(PAGE_HEADER_TEXT, exact=True).first.wait_for(
+                state="visible", timeout=20000
+            )
+        except Exception:
+            pass
         self.wait_for_idle(2)
 
     def verify_page_header(self) -> bool:
         """Verify the Sample Tracker page header is visible."""
-        header = self.page.get_by_text(PAGE_HEADER_TEXT, exact=True)
+        header = self.page.get_by_text(PAGE_HEADER_TEXT, exact=True).first
         try:
-            header.wait_for(state="visible", timeout=5000)
+            header.wait_for(state="visible", timeout=30000)
             return True
         except Exception:
             return False

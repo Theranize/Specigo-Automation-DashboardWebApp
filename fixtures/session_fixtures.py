@@ -3,6 +3,7 @@
 import pytest
 from datetime import datetime
 from utils.file_utils import load_json
+from utils.login_lock import login_lock
 from flows.login_flow import execute_login
 from flows.logout_flow import execute_logout
 from state import runtime_state
@@ -21,7 +22,11 @@ def login_as(page, pytestconfig):
     def do_login(role: str) -> None:
         nonlocal logged_in
         creds = env_creds[role]
-        execute_login(page, role, creds)
+        # Per-role file lock: under xdist -n N, only one worker submits the
+        # login form for a given role at a time. Prevents concurrent same-user
+        # logins from being rejected by the dev backend.
+        with login_lock(role):
+            execute_login(page, role, creds)
         runtime_state.set_value("current_role", role)
         runtime_state.set_value("username", creds["username"])
         runtime_state.set_value("login_timestamp", datetime.now().isoformat())
@@ -68,7 +73,8 @@ def swap_user(page, pytestconfig):
             except Exception:
                 pass
         creds = env_creds[role]
-        execute_login(_page, role, creds)
+        with login_lock(role):
+            execute_login(_page, role, creds)
         runtime_state.set_value("current_role", role)
         runtime_state.set_value("username", creds["username"])
         runtime_state.set_value("login_timestamp", datetime.now().isoformat())

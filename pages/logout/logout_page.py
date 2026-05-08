@@ -24,3 +24,10 @@ class LogoutPage:
         icon.click()
         self.page.get_by_role("heading", name=LOGOUT_CTA_NAME).click()
         self.page.get_by_text(LOGOUT_CONFIRM_TEXT).click()
+        # Wait for navigation back to /login. Under heavy parallel load this
+        # transition can lag, and the next mid-test login_as call would land
+        # on a transitional page where the username input isn't yet rendered.
+        try:
+            self.page.wait_for_url(lambda url: "/login" in url, timeout=15000)
+        except Exception:
+            pass

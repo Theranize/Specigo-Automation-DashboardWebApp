@@ -1,5 +1,6 @@
 """Front Desk page object — patient registration and published reports."""
 
+import time
 from typing import List, Dict, Optional
 from pages.base_page import BasePage
 from locators.front_desk.front_desk_locators import (
@@ -103,9 +104,27 @@ class FrontDeskPage(BasePage):
         self.wait_for_idle(2)
 
     def select_patient_card(self, card_display_name: str) -> None:
-        """Select an existing patient card from search results."""
+        """Select an existing patient card from search results.
+
+        Under parallel load (5 workers, multiple Aditya tests stacking on the
+        same backend account), transient AntD toasts/loaders from the prior
+        search action can cover the card and exhaust the 30 s wait. Wait for
+        those overlays to dismiss, scroll the card into view, then click.
+        """
+        self.page.wait_for_load_state("networkidle")
+        try:
+            self.page.wait_for_selector(
+                ".ant-modal-wrap, .ant-notification-notice, .ant-message-notice",
+                state="hidden", timeout=8000,
+            )
+        except Exception:
+            pass
         card = self.page.get_by_text(card_display_name, exact=False).first
-        card.wait_for(state="visible", timeout=30000)
+        card.wait_for(state="visible", timeout=60000)
+        try:
+            card.scroll_into_view_if_needed(timeout=3000)
+        except Exception:
+            pass
         card.click()
         self.wait_for_idle(2)
 
@@ -274,21 +293,85 @@ class FrontDeskPage(BasePage):
         return self.get_attribute_value(BALANCE_INPUT, "value")
 
     def click_print_bill(self) -> None:
-        """Click Print Bill, capture the new tab, wait, and close it."""
+        """Click Print Bill, capture the new tab, wait, and close it.
+
+        Under parallel load the popup-page event can lag past the default
+        30 s; retry up to 4 times with a 90 s window each. If no popup
+        opens after the retries, raise — empirically, when the popup truly
+        doesn't open the FD page state is left such that the next
+        click_print_barcode also fails. Failing here surfaces the root
+        cause cleanly instead of cascading.
+        """
         btn = self.page.get_by_role("button", name=PRINT_BILL_BUTTON_NAME)
         btn.wait_for(state="visible", timeout=90000)
+        # Visibility alone is insufficient — under load the modal may still
+        # be wiring up its handlers when the button paints. Poll for enabled.
+        enabled_deadline = time.time() + 10
+        while not btn.is_enabled() and time.time() < enabled_deadline:
+            self.wait_for_idle(0.3)
         context = self.page.context
-        with context.expect_page() as new_page_info:
-            btn.click()
-        bill_page = new_page_info.value
-        bill_page.wait_for_load_state()
-        bill_page.close()
+        bill_page = None
+        last_err: Optional[Exception] = None
+        for attempt in range(4):
+            try:
+                with context.expect_page(timeout=90000) as new_page_info:
+                    btn.click()
+                bill_page = new_page_info.value
+                break
+            except Exception as e:
+                last_err = e
+                self.wait_for_idle(1)
+                # If the modal was dismissed (button gone) re-locate so the
+                # next attempt clicks the freshly-rendered button.
+                try:
+                    if not btn.is_visible():
+                        btn = self.page.get_by_role(
+                            "button", name=PRINT_BILL_BUTTON_NAME
+                        )
+                        btn.wait_for(state="visible", timeout=10000)
+                except Exception:
+                    pass
+                continue
+        if bill_page is None:
+            raise TimeoutError(
+                f"click_print_bill: popup tab did not open after 4 retries "
+                f"(last error: {last_err})"
+            )
+        try:
+            bill_page.wait_for_load_state()
+        except Exception:
+            pass
+        try:
+            bill_page.close()
+        except Exception:
+            pass
 
     def click_print_barcode(self) -> None:
-        """Click Print Barcode and wait for the barcode modal to render."""
-        self.page.get_by_role(
-            "button", name=PRINT_BARCODE_BUTTON_NAME
-        ).click()
+        """Click Print Barcode and wait for the barcode modal to render.
+
+        Under heavy parallel load the button can take longer than the 30 s
+        default to render after the prior Print Bill step. Wait explicitly
+        for visibility, then retry the click once if it doesn't take.
+        """
+        btn = self.page.get_by_role("button", name=PRINT_BARCODE_BUTTON_NAME)
+        try:
+            btn.wait_for(state="visible", timeout=60000)
+        except Exception:
+            pass
+        last_err: Optional[Exception] = None
+        for attempt in range(2):
+            try:
+                btn.click(timeout=30000)
+                break
+            except Exception as e:
+                last_err = e
+                self.wait_for_idle(2)
+                continue
+        else:
+            raise TimeoutError(
+                f"click_print_barcode: button click failed after 2 attempts "
+                f"(last error: {last_err})"
+            )
         self.page.wait_for_timeout(2000)
 
     def capture_samples(
@@ -333,12 +416,17 @@ class FrontDeskPage(BasePage):
         return samples
 
     def close_barcode_modals(self) -> None:
-        """Two-step modal close after sample capture."""
+        """Two-step modal close after sample capture.
+
+        AntD modals usually transition to display:none rather than being
+        removed from the DOM; wait for `state="hidden"` (not "detached")
+        so the wait completes when the user-perceivable modal is gone.
+        """
         first_modal_close = self.page.locator(FIRST_MODAL_CLOSE_XPATH)
         if first_modal_close.count() > 0:
             first_modal_close.first.click(force=True)
             self.page.wait_for_selector(
-                FIRST_MODAL_SELECTOR, state="detached", timeout=10000
+                FIRST_MODAL_SELECTOR, state="hidden", timeout=10000
             )
             self.wait_for_idle(4)
 
@@ -346,7 +434,7 @@ class FrontDeskPage(BasePage):
         if final_modal_close.count() > 0:
             final_modal_close.click(force=True)
             self.page.wait_for_selector(
-                FINAL_MODAL_SELECTOR, state="detached", timeout=10000
+                FINAL_MODAL_SELECTOR, state="hidden", timeout=10000
             )
             self.wait_for_idle(4)
 
