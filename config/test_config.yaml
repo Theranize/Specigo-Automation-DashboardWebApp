@@ -2,13 +2,13 @@ timeout: 30000
 slow_mo: 50
 headless: false
 filters:
-  from_date: "08/05/2026"
-  to_date: "08/05/2026"
+  from_date: "11/05/2026"
+  to_date: "11/05/2026"
 local_filters:
   - patients: ["P13"]
-    from_date: "08/05/2026"
-    to_date: "08/05/2026"
+    from_date: "11/05/2026"
+    to_date: "11/05/2026"
   - patients: ["P14"]
-    from_date: "08/05/2026"
-    to_date: "08/05/2026"
+    from_date: "11/05/2026"
+    to_date: "11/05/2026"
 

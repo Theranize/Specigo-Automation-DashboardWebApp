@@ -159,8 +159,13 @@ class FrontDeskPage(BasePage):
         ``flows/front_desk_flow.py`` continue working unchanged.
         """
         from utils.error_detector import detect_ui_errors
+        from flows._guard import _SUCCESS_TEXT_RE
         err = detect_ui_errors(self.page)
-        return err.text if err else None
+        if err is None:
+            return None
+        if err.text and _SUCCESS_TEXT_RE.search(err.text):
+            return None
+        return err.text
 
     def select_salutation(self, value: str) -> None:
         """Open salutation dropdown via label-based XPath (avoids shifting AntD rc_select IDs)."""

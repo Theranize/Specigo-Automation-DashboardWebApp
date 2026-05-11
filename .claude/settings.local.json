@@ -109,7 +109,8 @@
       "PowerShell($content = [System.IO.File]::ReadAllText\\('.\\\\run.bat'\\); $crlf = $content -replace \"\\(?<!\\\\r\\)\\\\n\", \"`r`n\"; [System.IO.File]::WriteAllText\\('.\\\\run.bat', $crlf, \\(New-Object System.Text.UTF8Encoding $false\\)\\); $b = [System.IO.File]::ReadAllBytes\\('.\\\\run.bat'\\); \"Has CR now: $\\($b -contains 13\\)\"; \"Bytes: $\\($b.Length\\)\")",
       "PowerShell(\\(Get-Item .\\\\.last_run_output.log\\).Length; \"---\"; Get-Content .\\\\.last_run_output.log -Tail 30)",
       "PowerShell(Get-ChildItem .\\\\reports\\\\ -Recurse -File | Where-Object { $_.LastWriteTime -gt \\(Get-Date\\).AddHours\\(-1\\) } | Sort-Object LastWriteTime -Descending | Select-Object FullName, @{N='Mod';E={$_.LastWriteTime.ToString\\('HH:mm:ss'\\)}} | Format-Table -AutoSize | Out-String)",
-      "PowerShell(.\\\\Test\\\\Scripts\\\\python.exe -c \"from flows._guard import _SUCCESS_TEXT_RE; cases=['Patient Registered successfully','Patient Registered successfully.','Sample Rejected','Test rectification successfully completed','Mobile number is required','Please select relation','Patient record\\(s\\) found with the given mobile number','Maximum 10 patients can be added','Registered successfully']; [print\\(repr\\(c\\), '->', bool\\(_SUCCESS_TEXT_RE.search\\(c\\)\\)\\) for c in cases]\")"
+      "PowerShell(.\\\\Test\\\\Scripts\\\\python.exe -c \"from flows._guard import _SUCCESS_TEXT_RE; cases=['Patient Registered successfully','Patient Registered successfully.','Sample Rejected','Test rectification successfully completed','Mobile number is required','Please select relation','Patient record\\(s\\) found with the given mobile number','Maximum 10 patients can be added','Registered successfully']; [print\\(repr\\(c\\), '->', bool\\(_SUCCESS_TEXT_RE.search\\(c\\)\\)\\) for c in cases]\")",
+      "Bash(dir *)"
     ]
   }
 }
