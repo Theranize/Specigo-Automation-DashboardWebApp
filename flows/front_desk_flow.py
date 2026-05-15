@@ -1,6 +1,7 @@
 """Front Desk registration flow orchestrator."""
 
 from typing import Any, Dict
+from flows._guard import check_ui_error
 from pages.front_desk.front_desk_page import FrontDeskPage
 from state import runtime_state
 
@@ -70,11 +71,29 @@ def execute_front_desk_registration(
         if error:
             return _set_error(result, error, expected_err)
 
-        if is_existing and not is_adding_new_relative:
-            card_name = intent.get("card_display_name") or _build_card_name(patient)
-            fd.select_patient_card(card_name)
+        # Decide which card (if any) to click on the search-results page.
+        # The primary patient should ONLY be clicked for vanilla
+        # existing-primary flows. Relative flows go a different way:
+        #   * select_existing_relative → click the relative's card directly.
+        #   * add_new / add_new_relative → click "Add Relative" instead
+        #     (no primary click). When card_display_name is set on an
+        #     "add_*" flow, the relative already exists from a prior run, so
+        #     we click that card directly (idempotent shortcut).
+        relative_action = intent["relative_action"]
+        if is_existing:
+            if relative_action == "select_existing_relative":
+                card_name = intent.get("card_display_name") or _build_card_name(relative)
+                fd.select_patient_card(card_name)
+            elif relative_action in ("add_new", "add_new_relative"):
+                if intent.get("card_display_name"):
+                    fd.select_patient_card(intent["card_display_name"])
+                # otherwise fall through to click_add_relative below — no primary click.
+            else:
+                # relative_action == "none" → existing primary patient
+                card_name = intent.get("card_display_name") or _build_card_name(patient)
+                fd.select_patient_card(card_name)
 
-        if intent["relative_action"] in ("add_new", "add_new_relative") and not intent.get("card_display_name"):
+        if relative_action in ("add_new", "add_new_relative") and not intent.get("card_display_name"):
             fd.click_add_relative()
 
             # "10 patients limit" toast appears here, not after search
@@ -84,6 +103,18 @@ def execute_front_desk_registration(
 
             if relative.get("relation"):
                 fd.select_relation(relative["relation"])
+            elif expected_err.get("should_appear"):
+                # Expected an error toast (e.g. P7's 10-patient limit) that
+                # didn't appear — likely a parallel state race on the mobile.
+                # Fail with the expected-error context instead of cascading
+                # into "Please select relation" via an empty form submit.
+                result["error_found"] = True
+                result["error_message"] = (
+                    f"Expected error '{expected_err.get('message')}' did not "
+                    f"appear after click_add_relative; cannot proceed without "
+                    f"relation data."
+                )
+                return result
 
     if intent["search_before_add"]:
         auto_filled_mobile = fd.get_mobile_value()
@@ -153,6 +184,15 @@ def execute_front_desk_registration(
     if error:
         return _set_error(result, error, expected_err)
 
+    # Let the post-submit modal finish wiring up before triggering the
+    # popup-bound Print Bill click. Without this, the popup-page event
+    # occasionally fires before its listener attaches under worksteal load.
+    try:
+        page.wait_for_load_state("networkidle", timeout=15000)
+    except Exception:
+        pass
+    fd.wait_for_idle(1)
+
     fd.click_print_bill()
     fd.click_print_barcode()
 
@@ -164,6 +204,11 @@ def execute_front_desk_registration(
         )
 
     fd.close_barcode_modals()
+
+    # End-of-flow guard: catches any toast that fires after barcode capture
+    # (e.g. backend validation that surfaces only post-Submit).
+    if check_ui_error(page, result, "post-submit-final", expected_err):
+        return result
 
     runtime_state.set_value("patient_name", display_name)
     runtime_state.set_value("patient_mobile", patient["mobile_number"])

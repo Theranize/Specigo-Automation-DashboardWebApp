@@ -2,12 +2,14 @@
 """Root conftest: marker registration, fixture imports, trace management, and report generation."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
 import subprocess
 import sys
 import time
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Generator, Optional
@@ -18,6 +20,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from fixtures.browser_fixtures import browser_instance, page
 from fixtures.session_fixtures import login_as
+from flows.logout_flow import execute_logout
 from fixtures.data_fixtures import (
     login_credentials,
     front_desk_patient_data,
@@ -51,10 +54,12 @@ from utils.reporting import (
     phase_json_generator,
     save_run_snapshot,
     register_session,
+    load_session_registry,
     get_batch_number,
     resolve_report_paths,
 )
 from utils.error_detector import detect_ui_errors
+from utils.failure_artifact import write_highlight_sidecar
 from utils.phase_tracker import phase_tracker
 from state import runtime_state
 
@@ -62,6 +67,64 @@ HTML_REPORT_PATH = SUMMARY_HTML
 JSON_REPORT_PATH = SUMMARY_JSON
 
 _SESSION_START_ISO: str = ""
+
+# Visual hold (seconds) between a test finishing and the per-test browser
+# closing — gives the operator a chance to see the final page state, and on
+# failure follows the post-logout idle screen.
+POST_TEST_HOLD_SECONDS: float = 3.0
+
+# Where xdist workers dump their per-process result/phase partials so the
+# master can absorb them at sessionfinish.
+_PARTIALS_DIR: Path = Path("reports") / "runs" / "_partials"
+
+
+def _is_xdist_worker(session_or_config) -> bool:
+    """True when running inside an xdist worker (has a `workerinput` dict)."""
+    cfg = getattr(session_or_config, "config", session_or_config)
+    return getattr(cfg, "workerinput", None) is not None
+
+
+def _is_xdist_master(session_or_config) -> bool:
+    """True for non-xdist runs and for the xdist coordinator process."""
+    return not _is_xdist_worker(session_or_config)
+
+
+def _dump_worker_partial(worker_id: str) -> None:
+    """Serialise this worker's results + phase data to a JSON partial file."""
+    try:
+        _PARTIALS_DIR.mkdir(parents=True, exist_ok=True)
+        results = [asdict(r) for r in report_registry.results()]
+        phase_payload: dict = {}
+        if phase_tracker.has_data():
+            for tn, pmap in phase_tracker.get_report_data().items():
+                phase_payload[tn] = {
+                    pid: [asdict(e) for e in entries]
+                    for pid, entries in pmap.items()
+                }
+        payload = {"results": results, "phase_data": phase_payload}
+        (_PARTIALS_DIR / f"{worker_id}.json").write_text(
+            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
+        )
+    except Exception as exc:
+        print(f"  [xdist] worker {worker_id} failed to dump partial: {exc}")
+
+
+def _absorb_worker_partials() -> None:
+    """Read every worker partial, fold into master singletons, then unlink."""
+    if not _PARTIALS_DIR.exists():
+        return
+    for f in sorted(_PARTIALS_DIR.glob("*.json")):
+        try:
+            payload = json.loads(f.read_text(encoding="utf-8"))
+            report_registry.extend_from_dicts(payload.get("results") or [])
+            phase_tracker.merge_serialised(payload.get("phase_data") or {})
+        except Exception as exc:
+            print(f"  [xdist] could not absorb partial '{f.name}': {exc}")
+        finally:
+            try:
+                f.unlink()
+            except OSError:
+                pass
 
 # stash keys for inter-hook state (pytest 7+ stash API)
 _KEY_FAILED     = pytest.StashKey[bool]()
@@ -82,6 +145,31 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Target environment: dev (default) or staging",
     )
 
+    # ── Super-user (admin/manager) CLI options ──────────────────────────────
+    # All five default to None/False so they have zero effect on existing tests.
+    # The super-user entry test (tests/e2e/super_user/test_super_user_e2e.py)
+    # parametrizes only when --super-targets is set — otherwise it collects
+    # nothing and discovery is unchanged.
+    parser.addoption("--super-as",
+        action="store", default=None, choices=["admin", "manager"],
+        help="Super-user role driving the run (admin|manager)")
+    parser.addoption("--super-targets",
+        action="store", default=None,
+        help="Comma-separated patient IDs (P1..P14) for the super-user run")
+    parser.addoption("--super-until",
+        action="store", default=None, choices=["fd", "phlebo", "acc", "labt", "doc"],
+        help="Super-user stop stage (`till X`)")
+    parser.addoption("--super-continue",
+        action="store_true", default=False,
+        help="Hand off to per-role users after super-user's stop stage")
+    parser.addoption("--super-continue-till",
+        action="store", default=None, choices=["fd", "phlebo", "acc", "labt", "doc"],
+        help="Cap stage for the per-role continuation (`continue till Y`)")
+    parser.addoption("--super-reassign",
+        action="store", default="default", choices=["default", "super", "users"],
+        help="Reassign/recollect ownership override "
+             "(super = +reassign-admin, users = +reassign-users)")
+
 
 # --- marker registration ---
 
@@ -99,6 +187,57 @@ def pytest_configure(config: pytest.Config) -> None:
     ]
     for marker in _MARKERS:
         config.addinivalue_line("markers", marker)
+    _validate_super_user_options(config)
+
+
+# --- Same-mobile concurrent execution ---
+# Tests sharing a backend mobile (e.g. P1/P2/P3/P4/P6/P12/P13 all on Aditya
+# 7777777777) used to serialise through a `_mobile_serialise` autouse fixture
+# wrapping `mobile_lock` (utils/login_lock.py). That left workers idle for
+# ~28 min while one worker drained the Aditya queue (autouse fixtures run
+# BEFORE the browser fixture, so blocked workers had no browser open).
+#
+# We now allow concurrent same-mobile execution and rely on each phase
+# disambiguating *its own* report by the unique sample_id captured from the
+# FD barcode modal (`runtime_state.add_sample` in `flows/front_desk_flow.py`):
+#   - phlebo/accession `find_sample_block` already match by sample_id
+#   - doctor `open_report_entry` matches by sample_id (fallback rows.first)
+#   - accession `find_sample_block_by_name` (recollection) takes a
+#     `preferred_sample_id` hint
+# Login serialisation (`login_lock`) is unchanged — still required to
+# prevent the dev backend rejecting concurrent same-role logins.
+# `mobile_lock` and `mobile_for` remain available as utilities for any
+# narrowly-scoped future use, but are not currently wired into any fixture.
+
+
+def _validate_super_user_options(config: pytest.Config) -> None:
+    """Parse-time validation for super-user CLI options.
+
+    Rejects `till X continue till Y` when canonical order of Y < X. Also
+    rejects --super-targets without --super-as (and vice versa) so misuse
+    fails fast instead of silently collecting nothing.
+    """
+    targets = config.getoption("--super-targets", default=None)
+    super_as = config.getoption("--super-as", default=None)
+    if bool(targets) ^ bool(super_as):
+        raise pytest.UsageError(
+            "Super-user mode requires both --super-as and --super-targets"
+        )
+    if not targets:
+        return
+    until      = config.getoption("--super-until", default=None)
+    cont_till  = config.getoption("--super-continue-till", default=None)
+    has_cont   = config.getoption("--super-continue", default=False)
+    order = {"fd": 1, "phlebo": 2, "acc": 3, "labt": 4, "doc": 5}
+    if cont_till and not has_cont:
+        raise pytest.UsageError(
+            "--super-continue-till requires --super-continue"
+        )
+    if until and cont_till and order[cont_till] < order[until]:
+        raise pytest.UsageError(
+            f"--super-continue-till ({cont_till}) must be at or after "
+            f"--super-until ({until}) in canonical order fd→phlebo→acc→labt→doc"
+        )
 
 
 # --- session lifecycle ---
@@ -106,16 +245,29 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_sessionstart(session: pytest.Session) -> None:
     """Record session start time and create all artifact/report directories."""
     global _SESSION_START_ISO
-    _SESSION_START_ISO = datetime.now().isoformat(timespec="seconds")
+    if _is_xdist_master(session):
+        _SESSION_START_ISO = datetime.now().isoformat(timespec="seconds")
     artifact_manager.ensure_dirs()
 
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
-    """Generate all reports after the test session completes."""
-    results   = report_registry.results()
-    summary   = report_registry.summary()
-    run_id    = datetime.now().strftime("run_%Y%m%d_%H%M%S")
-    start_iso = _SESSION_START_ISO
+    """Generate all reports after the test session completes.
+
+    Under xdist: each worker dumps its partial state and returns early.
+    Master absorbs every partial into the singletons before running the
+    existing report-generation flow, so the summary covers all workers.
+    """
+    if _is_xdist_worker(session):
+        _dump_worker_partial(session.config.workerinput["workerid"])
+        return
+
+    _absorb_worker_partials()
+
+    results          = report_registry.results()
+    summary          = report_registry.summary()
+    next_session_num = load_session_registry().get("total_sessions", 0) + 1
+    run_id           = f"Run_Sp_{next_session_num:010d}"
+    start_iso        = _SESSION_START_ISO
 
     phase_data = phase_tracker.get_report_data() if phase_tracker.has_data() else {}
 
@@ -142,7 +294,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     s_html, s_json, s_csv, ph_html, ph_json = resolve_report_paths(batch)
 
-    html_generator.generate(results, summary, s_html)
+    html_generator.generate(results, summary, s_html, run_id=run_id)
     json_generator.generate(results, summary, s_json)
     csv_generator.generate(results, s_csv)
 
@@ -158,7 +310,9 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     print("  [SESSION SYSTEM]  Summary report (Batch {})          -> {}".format(batch, s_html))
 
     allure_ok = _run_allure_generate()
-    _print_summary(summary, allure_ok, s_html, s_json, s_csv, ph_html, session_num, batch)
+    _print_summary(
+        summary, allure_ok, s_html, s_json, s_csv, ph_html, session_num, batch,
+    )
 
 
 def _run_allure_generate() -> bool:
@@ -214,14 +368,14 @@ def _run_allure_generate() -> bool:
 
 
 def _print_summary(
-    summary:          dict,
-    allure_generated: bool           = False,
-    summary_html:     Optional[Path] = None,
-    summary_json:     Optional[Path] = None,
-    summary_csv:      Optional[Path] = None,
-    phase_html:       Optional[Path] = None,
-    session_num:      int            = 0,
-    batch:            int            = 1,
+    summary:             dict,
+    allure_generated:    bool           = False,
+    summary_html:        Optional[Path] = None,
+    summary_json:        Optional[Path] = None,
+    summary_csv:         Optional[Path] = None,
+    phase_html:          Optional[Path] = None,
+    session_num:         int            = 0,
+    batch:               int            = 1,
 ) -> None:
     """Print a concise session summary banner to stdout."""
     s_html  = summary_html or SUMMARY_HTML
@@ -346,6 +500,20 @@ def _trace_and_timing(request: pytest.FixtureRequest) -> Generator[None, None, N
                 except Exception:
                     pass
 
+    # Per-test cleanup: on failure attempt an explicit logout while the page
+    # is still open, then hold the final state briefly before the browser
+    # tears down (browser_instance is function-scoped, so close happens next).
+    if failed and _pg is not None:
+        try:
+            if not _pg.is_closed():
+                execute_logout(_pg)
+        except Exception:
+            pass  # best-effort; the next test gets a fresh browser regardless
+    try:
+        time.sleep(POST_TEST_HOLD_SECONDS)
+    except Exception:
+        pass
+
 
 # --- failure screenshot and report hook ---
 
@@ -413,6 +581,7 @@ def _capture_failure_screenshots(
     try:
         shot_p = artifact_manager.screenshot_path(test_name, patient_id, step)
         page.screenshot(path=str(shot_p), full_page=True)
+        write_highlight_sidecar(page, str(shot_p))
         primary_path = str(shot_p)
         item.stash[_KEY_SCREENSHOT] = primary_path
     except Exception:
@@ -423,6 +592,7 @@ def _capture_failure_screenshots(
         if ui_err:
             ui_p = artifact_manager.screenshot_path(test_name, patient_id, "ui_error")
             page.screenshot(path=str(ui_p), full_page=True)
+            write_highlight_sidecar(page, str(ui_p))
             if primary_path == "---":
                 primary_path = str(ui_p)
     except Exception:

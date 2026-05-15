@@ -38,26 +38,38 @@ class AccessionPage(BasePage):
     """Page object for the Accession Sample Verification workflow."""
 
     def navigate_to_sample_verification(self) -> None:
-        """Click Accession sidebar → Sample Verification."""
-        accession = self.page.get_by_text(
-            SIDEBAR_ACCESSION_TEXT, exact=True
-        )
-        accession.wait_for(state="visible", timeout=30000)
-        accession.click()
-        accession.hover()
-        self.wait_for_idle(0.6)
-        accession.click()
+        """Navigate to Accession Sample Verification (URL: /sampleverification).
 
-        self.page.get_by_text(
-            SIDEBAR_SAMPLE_VERIFICATION_TEXT, exact=True
-        ).click()
+        Bypasses the sidebar nav menu (Accession → Sample Verification),
+        which is fragile under heavy parallel load — the menu's expand
+        animation often doesn't complete and the sub-link stays hidden.
+        Direct goto is deterministic.
+        """
+        base = getattr(self.page.context, "base_url", "") or ""
+        if "sampleverification" not in (self.page.url or ""):
+            self.safe_goto(base + "sampleverification")
+        try:
+            self.page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
+        try:
+            self.page.get_by_placeholder(SEARCH_NAME_PLACEHOLDER).first.wait_for(
+                state="visible", timeout=20000
+            )
+        except Exception:
+            pass
         self.wait_for_idle(2)
 
     def wait_for_table_rows(self) -> bool:
-        """Wait for result table rows to appear; returns True if rows appeared."""
+        """Wait for result table rows to appear; returns True if rows appeared.
+
+        Bumped to 30 s — under 5-worker parallel load the dev backend's
+        search response can take 15-20 s; the previous 10 s was tripping
+        false-negatives on otherwise-valid runs.
+        """
         try:
             self.page.locator(TABLE_ROWS_SELECTOR).first.wait_for(
-                state="visible", timeout=10000
+                state="visible", timeout=30000
             )
             return True
         except Exception:
@@ -110,14 +122,34 @@ class AccessionPage(BasePage):
 
         return None
 
-    def find_sample_block_by_name(self, sample_name: str) -> Optional[Locator]:
-        """Find first sample block by name only (for recollected samples with new IDs)."""
+    def find_sample_block_by_name(
+        self,
+        sample_name: str,
+        preferred_sample_id: Optional[str] = None,
+    ) -> Optional[Locator]:
+        """Find a sample block by name (recollected samples have new IDs).
+
+        If `preferred_sample_id` is given, prefer the row whose text contains
+        it; this defends against concurrent same-mobile tests both reaching
+        the recollection step and seeing each other's rows. Falls back to
+        name-only first match if the hint doesn't resolve.
+        """
         rows = self.page.locator(TABLE_ROWS_SELECTOR)
         try:
             rows.first.wait_for(state="visible", timeout=8000)
         except Exception:
             return None
-        for row_idx in range(rows.count()):
+        row_count = rows.count()
+        if preferred_sample_id:
+            for row_idx in range(row_count):
+                row = rows.nth(row_idx)
+                if preferred_sample_id in row.inner_text():
+                    blocks = row.locator(SAMPLE_BLOCK_SELECTOR)
+                    for block_idx in range(blocks.count()):
+                        block = blocks.nth(block_idx)
+                        if sample_name in block.inner_text():
+                            return block
+        for row_idx in range(row_count):
             row = rows.nth(row_idx)
             blocks = row.locator(SAMPLE_BLOCK_SELECTOR)
             for block_idx in range(blocks.count()):

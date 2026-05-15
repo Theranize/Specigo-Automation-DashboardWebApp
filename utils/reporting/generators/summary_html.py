@@ -14,11 +14,67 @@ import json
 from datetime import datetime
 from html import escape
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from utils.reporting.constants import patient_label
+from utils.reporting.format import fmt_duration
 from utils.reporting.models import TestResult
 from utils.reporting.session import _load_run_history
+
+
+# =============================================================================
+# RUN-HISTORY PAGINATION
+# =============================================================================
+#: Maximum runs shown per History sub-tab. When the project crosses this
+#: threshold, a new tab is added to the Run History panel; the most recent
+#: page is always labelled "Latest" and is the default-active tab.
+RUN_HISTORY_PAGE_SIZE = 50
+
+
+def _paginate_runs(runs: List[dict], page_size: int = RUN_HISTORY_PAGE_SIZE) -> List[List[dict]]:
+    """Split a chronological run list into pages of *page_size*, latest first.
+
+    ``runs`` is the oldest→newest list returned by ``_load_run_history()``.
+    Returns ``[[latest 50], [previous 50], [previous 50], ...]`` — each
+    inner page preserves chronological (oldest→newest) order so the trend
+    chart's x-axis still reads left-to-right by time.
+    """
+    if not runs:
+        return []
+    pages: List[List[dict]] = []
+    end = len(runs)
+    while end > 0:
+        start = max(0, end - page_size)
+        pages.append(runs[start:end])
+        end = start
+    return pages
+
+
+# Shared <thead> for every per-page run-history table.
+_HIST_THEAD = (
+    '<thead><tr>'
+    '<th>#</th><th>Run ID</th><th>Date</th>'
+    '<th>Total</th><th>Passed</th><th>Failed</th>'
+    '<th>Pass %</th><th>Duration</th><th>Open</th>'
+    '</tr></thead>'
+)
+
+
+def _page_meta(page_idx: int, page_runs: List[dict]) -> dict:
+    """Return ``{title, range, count}`` for one paginated history page.
+
+    ``title`` is ``"Latest"`` for page 0, ``"Page N"`` (1-based) for older
+    pages. ``range`` is the inclusive session-number span (``"38-87"``) or
+    a positional fallback when ``session_num`` was never registered.
+    """
+    nums = [int(r.get("session_num") or 0) for r in page_runs]
+    valid = [n for n in nums if n > 0]
+    if valid:
+        rng = f"{min(valid)}-{max(valid)}"
+    else:
+        rng = f"1-{len(page_runs)}"
+    title = "Latest" if page_idx == 0 else f"Page {page_idx + 1}"
+    return {"title": title, "range": rng, "count": len(page_runs)}
 
 
 # =============================================================================
@@ -54,7 +110,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
           color:rgba(255,255,255,.65);cursor:pointer;font-size:.8rem;
           font-family:inherit;transition:all .15s}
 .hnav-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.hnav-btn.active{background:rgba(255,255,255,.16);color:#fff;font-weight:600}
+.hnav-btn.active{background:rgba(255,255,255,.16);color:#fff;font-weight:600;
+                 text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px}
 /* ===== LAYOUT ===== */
 .wrap{max-width:1480px;margin:0 auto;padding:24px 32px}
 /* ===== MAIN TABS ===== */
@@ -103,13 +160,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
              letter-spacing:.07em;color:var(--text2)}
 .chart-wrap{position:relative;width:100%;display:flex;align-items:center;
             justify-content:center;min-height:200px}
-/* ===== PHASE LINK BAR ===== */
-.phase-link-bar{background:#f0f5ff;border:1px solid #adc6ff;border-radius:var(--r);
-                padding:10px 20px;margin-bottom:16px;display:flex;align-items:center;
-                justify-content:space-between;font-size:.85rem}
-.phase-link-bar a{color:var(--blue);font-weight:600;text-decoration:none;
-                  display:inline-flex;align-items:center;gap:5px}
-.phase-link-bar a:hover{text-decoration:underline}
 /* ===== TOOLBAR ===== */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .fbtn{padding:5px 14px;border:1px solid var(--border);border-radius:20px;
@@ -121,10 +171,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 .fbtn.fa-fail.active{background:#ff4d4f;border-color:#ff4d4f}
 .fbtn.fa-error.active{background:#fa8c16;border-color:#fa8c16}
 .fbtn.fa-skip.active{background:#8c8c8c;border-color:#8c8c8c}
-.search-box{margin-left:auto;padding:6px 14px;border:1px solid var(--border);
-            border-radius:20px;font-size:.82rem;outline:none;
-            transition:border-color .12s;min-width:200px;font-family:inherit}
-.search-box:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(22,119,255,.1)}
 /* ===== RESULT TABLE ===== */
 .tbl-wrap{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
 table{width:100%;border-collapse:collapse}
@@ -164,10 +210,6 @@ tbody tr.row-skip:hover{background:#f5f5f5}
 .err-short{cursor:pointer}.err-short:hover{text-decoration:underline dashed}
 .err-full{display:none;white-space:pre-wrap;word-break:break-all;font-size:.76rem}
 .err-expanded .err-short{display:none}.err-expanded .err-full{display:block}
-a.shot-link{color:var(--blue);font-size:.8rem;text-decoration:none;
-            display:inline-flex;align-items:center;gap:3px}
-a.shot-link:hover{text-decoration:underline}
-a.shot-link::before{content:'\\1F4F8';font-size:.75rem}
 .dur-cell{white-space:nowrap;color:var(--text2);font-size:.82rem}
 .no-data{text-align:center;padding:48px!important;color:var(--text3);font-size:.92rem}
 /* ===== RUN HISTORY ===== */
@@ -180,6 +222,21 @@ a.shot-link::before{content:'\\1F4F8';font-size:.75rem}
 .hcard .hnum{font-size:1.7rem;font-weight:800;line-height:1.1}
 .hcard .hlbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
 .hcard .hsub{font-size:.78rem;color:var(--text2);margin-top:2px}
+/* ===== HISTORY PER-PAGE TABS (50 runs per page) ===== */
+.hist-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);
+           margin:18px 0 14px;flex-wrap:wrap}
+.hist-tab{display:inline-flex;align-items:center;gap:6px;
+          padding:8px 18px;border:none;background:transparent;cursor:pointer;
+          font-size:.81rem;color:var(--text2);font-family:inherit;font-weight:500;
+          border-bottom:2px solid transparent;margin-bottom:-1px;
+          transition:color .15s,border-color .15s}
+.hist-tab:hover{color:var(--blue)}
+.hist-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:700}
+.hist-tab-rng{font-size:.7rem;color:var(--text3);font-weight:500}
+.hist-tab.active .hist-tab-rng{color:var(--blue)}
+.hist-page-panel{display:none}
+.hist-page-panel.active{display:block}
+.hist-table-wrap{margin-top:12px}
 .run-id-cell{font-family:'Consolas','Courier New',monospace;font-size:.8rem;color:#262626}
 .open-btn{padding:4px 12px;background:var(--blue);color:#fff;border:none;
           border-radius:12px;cursor:pointer;font-size:.75rem;font-family:inherit;
@@ -204,22 +261,25 @@ a.shot-link::before{content:'\\1F4F8';font-size:.75rem}
 # =============================================================================
 _JS = """
 /* ---- Main tab switching ---- */
+/* Header pills (.hnav-btn) and body tabs (.main-tab) both carry data-tab and
+   are toggled together so the active-state styling (incl. underline) stays
+   in sync regardless of which one the user clicks. */
 function switchMainTab(id) {
-  document.querySelectorAll('.main-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.hnav-btn, .main-tab').forEach(function(t) { t.classList.remove('active'); });
   document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById('mtab-' + id).classList.add('active');
-  document.getElementById('mpanel-' + id).classList.add('active');
+  document.querySelectorAll('[data-tab="' + id + '"]').forEach(function(t) { t.classList.add('active'); });
+  var panel = document.getElementById('mpanel-' + id);
+  if (panel) panel.classList.add('active');
 }
 
 /* ---- Current-run table filter ---- */
-var _sf = 'ALL', _sq = '';
+var _sf = 'ALL';
 function applyFilters() {
   var rows = document.querySelectorAll('#rtbody tr');
   rows.forEach(function(r) {
     var b = r.querySelector('.badge');
     var sm = (_sf === 'ALL') || (b && b.getAttribute('data-status') === _sf);
-    var qm = !_sq || r.textContent.toLowerCase().indexOf(_sq.toLowerCase()) >= 0;
-    r.style.display = (sm && qm) ? '' : 'none';
+    r.style.display = sm ? '' : 'none';
   });
 }
 function filterStatus(s) {
@@ -229,7 +289,6 @@ function filterStatus(s) {
   if (btn) btn.classList.add('active');
   applyFilters();
 }
-function onSearch(q) { _sq = q; applyFilters(); }
 
 /* ---- Sort current-run table ---- */
 var _sc = -1, _sa = true;
@@ -254,29 +313,6 @@ function sortCol(c) {
 }
 function toggleErr(el) { el.closest('.err-cell').classList.toggle('err-expanded'); }
 
-/* ---- History search & session filter ---- */
-var _histSess = 0;
-var _histQ    = '';
-function filterHistSession(snum) {
-  _histSess = snum;
-  document.querySelectorAll('[id^="hsf-"]').forEach(function(b) { b.classList.remove('active'); });
-  var btn = document.getElementById('hsf-' + snum);
-  if (btn) btn.classList.add('active');
-  _refreshHistTable();
-}
-function onHistSearch(q) {
-  _histQ = q.toLowerCase();
-  _refreshHistTable();
-}
-function _refreshHistTable() {
-  document.querySelectorAll('#rhtbody > tr.run-row').forEach(function(r) {
-    var matchSess = (_histSess === 0 || parseInt(r.dataset.session || 0) === _histSess);
-    var matchQ    = (!_histQ || r.textContent.toLowerCase().indexOf(_histQ) >= 0);
-    r.style.display = (matchSess && matchQ) ? '' : 'none';
-    var next = r.nextElementSibling;
-    if (next && next.classList.contains('run-detail-row')) next.style.display = 'none';
-  });
-}
 /* ---- Run history row expand ---- */
 function toggleRun(btn, runIdx) {
   var detailRow = document.getElementById('rdr-' + runIdx);
@@ -318,34 +354,64 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   var trendEl = document.getElementById('trendChart');
   if (trendEl && window.Chart && _RUN_HISTORY.length > 0) {
-    var labels = _RUN_HISTORY.map(function(r) {
+    // Home-page trend shows only the most recent 20 sessions so a long
+    // history doesn't compress the bars into illegibility. Full history
+    // remains available on the Run History tab (trendChartHist).
+    var _recent = _RUN_HISTORY.slice(-20);
+    var labels = _recent.map(function(r) {
       return r.session_num ? 'Session ' + r.session_num : (r.run_id || '').replace('run_','').replace(/_/g,' ');
     });
-    var rates = _RUN_HISTORY.map(function(r) { return r.summary ? r.summary.pass_rate : 0; });
-    var colors = rates.map(function(v) {
-      return v >= 90 ? '#52c41a' : (v >= 70 ? '#fa8c16' : '#ff4d4f');
+    var passPct = _recent.map(function(r) {
+      var s = r.summary || {};
+      return s.total ? Math.round((s.passed / s.total) * 1000) / 10 : 0;
+    });
+    var failPct = _recent.map(function(r) {
+      var s = r.summary || {};
+      return s.total ? Math.round((s.failed / s.total) * 1000) / 10 : 0;
     });
     new Chart(trendEl.getContext('2d'), {
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [{ label: 'Pass Rate %', data: rates,
-          backgroundColor: colors, borderRadius: 4, borderSkipped: false }]
+        datasets: [
+          { label: 'Pass %', data: passPct, backgroundColor: '#52c41a',
+            borderRadius: 4, borderSkipped: false, stack: 's' },
+          { label: 'Fail %', data: failPct, backgroundColor: '#ff4d4f',
+            borderRadius: 4, borderSkipped: false, stack: 's' }
+        ]
       },
       options: {
         scales: {
-          y: { min: 0, max: 100, ticks: { callback: function(v) { return v + '%'; } } },
-          x: { ticks: { font: { size: 10 } } }
+          x: { stacked: true, ticks: { font: { size: 10 } } },
+          y: { stacked: true, min: 0, max: 100,
+               ticks: { callback: function(v) { return v + '%'; } } }
         },
         plugins: {
-          legend: { display: false },
+          legend: { display: true, position: 'bottom',
+                    labels: { boxWidth: 12, font: { size: 11 } } },
           tooltip: { callbacks: {
             title: function(items) {
-              var r = _RUN_HISTORY[items[0].dataIndex];
+              var r = _recent[items[0].dataIndex];
               var tests = (r.tests_executed || []).join(', ') || '(none)';
               return (r.session_num ? 'Session ' + r.session_num : items[0].label) + ' \u2014 ' + tests;
             },
-            label: function(c) { return c.raw + '%'; }
+            label: function(c) {
+              var r     = _recent[c.dataIndex];
+              var s     = r.summary || {};
+              var tot   = s.total  || 0;
+              var p     = s.passed || 0;
+              var f     = s.failed || 0;
+              var prate = s.pass_rate != null ? s.pass_rate : 0;
+              var frate = tot ? Math.round((f / tot) * 1000) / 10 : 0;
+              var pats  = {};
+              (r.results || []).forEach(function(x) { if (x.patient_id) pats[x.patient_id] = 1; });
+              return [
+                'Pass: ' + p + ' (' + prate + '%)',
+                'Fail: ' + f + ' (' + frate + '%)',
+                'Total cases: ' + tot,
+                'Patients tested: ' + Object.keys(pats).length
+              ];
+            }
           }}
         }
       }
@@ -366,12 +432,18 @@ class HtmlReportGenerator:
         results:     List[TestResult],
         summary:     dict,
         output_path: Path,
+        run_id:      Optional[str] = None,
     ) -> None:
         """Write the HTML report to *output_path*."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(self._build(results, summary), encoding="utf-8")
+        output_path.write_text(self._build(results, summary, run_id), encoding="utf-8")
 
-    def _build(self, results: List[TestResult], summary: dict) -> str:
+    def _build(
+        self,
+        results: List[TestResult],
+        summary: dict,
+        run_id:  Optional[str] = None,
+    ) -> str:
         pr      = summary["pass_rate"]
         pr_cls  = "hp-green" if pr >= 90 else ("hp-yellow" if pr >= 70 else "hp-red")
         total   = summary["total"]
@@ -382,12 +454,11 @@ class HtmlReportGenerator:
         dur     = summary["duration_seconds"]
         gen_at  = summary["generated_at"]
 
-        # Compute run_id from generated_at
-        try:
-            dt_obj = datetime.fromisoformat(gen_at)
-            run_id = dt_obj.strftime("run_%Y%m%d_%H%M%S")
-        except Exception:
-            run_id = "run_unknown"
+        if not run_id:
+            try:
+                run_id = datetime.fromisoformat(gen_at).strftime("run_%Y%m%d_%H%M%S")
+            except Exception:
+                run_id = "run_unknown"
 
         unique_patients = len({r.patient_id for r in results if r.patient_id})
         unique_modules  = len({r.module for r in results if r.module})
@@ -397,9 +468,30 @@ class HtmlReportGenerator:
 
         rows_html = "\n".join(self._row(r) for r in results)
         empty_row = (
-            '<tr><td colspan="7" class="no-data">No test results recorded.</td></tr>'
+            '<tr><td colspan="6" class="no-data">No test results recorded.</td></tr>'
             if not results else ""
         )
+
+        # Paginate the history into 50-run pages, latest-first.
+        # Each page renders its own tab, line-chart canvas, and table.
+        hist_pages         = _paginate_runs(runs)
+        hist_pages_payload = [
+            [
+                {
+                    "session_num":    r.get("session_num", 0),
+                    "run_id":         r.get("run_id", ""),
+                    "summary":        r.get("summary", {}),
+                    "tests_executed": r.get("tests_executed", []),
+                    "total_patients": len({
+                        res.get("patient_id")
+                        for res in r.get("results", [])
+                        if res.get("patient_id")
+                    }),
+                }
+                for r in page
+            ]
+            for page in hist_pages
+        ]
 
         js_vars = (
             f"var _DPASSED = {passed};\n"
@@ -407,21 +499,11 @@ class HtmlReportGenerator:
             f"var _DERRORS = {errors};\n"
             f"var _DSKIPPED = {skipped};\n"
             f"var _RUN_HISTORY = {json.dumps(runs)};\n"
+            f"var _HIST_PAGES = {json.dumps(hist_pages_payload)};\n"
         )
 
-        _session_nums = sorted({r.get("session_num", 0) for r in runs if r.get("session_num", 0)})
-        if _session_nums:
-            _sf_all  = '<button class="fbtn active" id="hsf-0" onclick="filterHistSession(0)">All Sessions</button>'
-            _sf_btns = "".join(
-                f'<button class="fbtn" id="hsf-{sn}" onclick="filterHistSession({sn})">Session {sn}</button>'
-                for sn in _session_nums
-            )
-            sess_filter_html = _sf_all + _sf_btns
-        else:
-            sess_filter_html = ""
-
         hist_cards_html = self._run_hist_cards(runs)
-        hist_table_html = self._run_hist_table(runs, run_id)
+        hist_tabs_html, hist_panels_html = self._render_hist_pages(hist_pages, run_id)
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -448,9 +530,9 @@ class HtmlReportGenerator:
       </div>
     </div>
     <nav class="hdr-nav">
-      <button class="hnav-btn active" id="mtab-current"
+      <button class="hnav-btn active" data-tab="current"
               onclick="switchMainTab('current')">Current Run</button>
-      <button class="hnav-btn" id="mtab-history"
+      <button class="hnav-btn" data-tab="history"
               onclick="switchMainTab('history')">Run History ({num_runs})</button>
     </nav>
   </div>
@@ -460,12 +542,12 @@ class HtmlReportGenerator:
 
   <!-- ===== MAIN TABS ===== -->
   <div class="main-tabs">
-    <button class="main-tab active" id="mtab-current"
+    <button class="main-tab active" data-tab="current"
             onclick="switchMainTab('current')">
       Current Run
       <span class="tc">{total}</span>
     </button>
-    <button class="main-tab" id="mtab-history"
+    <button class="main-tab" data-tab="history"
             onclick="switchMainTab('history')">
       Run History
       <span class="tc">{num_runs}</span>
@@ -487,7 +569,7 @@ class HtmlReportGenerator:
       </div>
       <div class="rm-item">
         <div class="rm-lbl">Duration</div>
-        <div class="rm-val">{dur}s</div>
+        <div class="rm-val">{fmt_duration(dur)}</div>
       </div>
       <div class="rm-item">
         <div class="rm-lbl">Total Tests</div>
@@ -540,19 +622,11 @@ class HtmlReportGenerator:
         </div>
       </div>
       <div class="chart-card">
-        <div class="chart-title">Pass Rate Trend &mdash; By Session</div>
+        <div class="chart-title">Pass Rate Trend &mdash; Last 20 Sessions</div>
         <div class="chart-wrap">
           <canvas id="trendChart"></canvas>
         </div>
       </div>
-    </div>
-
-    <!-- Phase report link bar -->
-    <div class="phase-link-bar">
-      <span>E2E phase-level breakdown available in the Phase Report</span>
-      <a href="patient_phase_report.html" target="_blank">
-        Open Phase Breakdown Report &rarr;
-      </a>
     </div>
 
     <!-- Toolbar -->
@@ -572,9 +646,6 @@ class HtmlReportGenerator:
       <button id="fb-SKIP"  class="fbtn fa-skip"  onclick="filterStatus('SKIP')">
         Skip ({skipped})
       </button>
-      <input class="search-box" type="text"
-             placeholder="Search tests, modules, patients..."
-             oninput="onSearch(this.value)">
     </div>
 
     <!-- Result table -->
@@ -587,8 +658,7 @@ class HtmlReportGenerator:
             <th onclick="sortCol(2)">Patient<span class="si">&#8597;</span></th>
             <th onclick="sortCol(3)">Status<span class="si">&#8597;</span></th>
             <th onclick="sortCol(4)">Error<span class="si">&#8597;</span></th>
-            <th>Screenshot</th>
-            <th onclick="sortCol(6)">Time<span class="si">&#8597;</span></th>
+            <th onclick="sortCol(5)">Time<span class="si">&#8597;</span></th>
           </tr>
         </thead>
         <tbody id="rtbody">
@@ -604,45 +674,11 @@ class HtmlReportGenerator:
 
     {hist_cards_html}
 
-    <!-- Trend chart in history panel -->
-    <div class="charts-row" style="grid-template-columns:1fr">
-      <div class="chart-card">
-        <div class="chart-title">Pass Rate Trend &mdash; All Sessions</div>
-        <div class="chart-wrap" style="min-height:180px">
-          <canvas id="trendChartHist"></canvas>
-        </div>
-      </div>
-    </div>
+    <!-- Per-page tab strip (50 runs per page, latest first) -->
+    {hist_tabs_html}
 
-    <!-- History toolbar -->
-    <div class="toolbar" style="margin-bottom:14px">
-      {sess_filter_html}
-      <input class="search-box" type="text"
-             placeholder="Search run ID, date..."
-             oninput="onHistSearch(this.value)">
-    </div>
-
-    <!-- Run history table -->
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Run ID</th>
-            <th>Date</th>
-            <th>Total</th>
-            <th>Passed</th>
-            <th>Failed</th>
-            <th>Pass %</th>
-            <th>Duration</th>
-            <th>Open</th>
-          </tr>
-        </thead>
-        <tbody id="rhtbody">
-          {hist_table_html}
-        </tbody>
-      </table>
-    </div>
+    <!-- One panel per page: chart + table for that page's 50 runs -->
+    {hist_panels_html}
 
   </div><!-- #mpanel-history -->
 
@@ -650,57 +686,106 @@ class HtmlReportGenerator:
 
 <div class="footer">
   Summary Report &bull; {escape(gen_at)}
-  &nbsp;&bull;&nbsp;
-  <a href="patient_phase_report.html" target="_blank">Phase Breakdown Report</a>
 </div>
 
 <script>
 {js_vars}
 {_JS}
-/* Second trend chart for history panel */
-document.addEventListener('DOMContentLoaded', function() {{
-  var el2 = document.getElementById('trendChartHist');
-  if (el2 && window.Chart && _RUN_HISTORY.length > 0) {{
-    var labels = _RUN_HISTORY.map(function(r) {{
-      return r.session_num ? 'Session ' + r.session_num : (r.run_id || '').replace('run_','').replace(/_/g,' ');
-    }});
-    var rates = _RUN_HISTORY.map(function(r) {{ return r.summary ? r.summary.pass_rate : 0; }});
-    var colors = rates.map(function(v) {{
-      return v >= 90 ? '#52c41a' : (v >= 70 ? '#fa8c16' : '#ff4d4f');
-    }});
-    new Chart(el2.getContext('2d'), {{
-      type: 'bar',
-      data: {{
-        labels: labels,
-        datasets: [{{ label: 'Pass Rate %', data: rates,
-          backgroundColor: colors, borderRadius: 4, borderSkipped: false }}]
-      }},
-      options: {{
-        scales: {{
-          y: {{ min: 0, max: 100, ticks: {{ callback: function(v) {{ return v + '%'; }} }} }},
-          x: {{ ticks: {{ font: {{ size: 10 }} }} }}
-        }},
-        plugins: {{
-          legend: {{ display: false }},
-          tooltip: {{ callbacks: {{
-            title: function(items) {{
-              var r = _RUN_HISTORY[items[0].dataIndex];
-              var tests = (r.tests_executed || []).join(', ') || '(none)';
-              return (r.session_num ? 'Session ' + r.session_num : items[0].label) + ' \u2014 ' + tests;
-            }},
-            label: function(c) {{ return c.raw + '%'; }}
-          }} }}
-        }}
-      }}
-    }});
-  }}
-}});
-/* Fix duplicate tab IDs by wiring header nav buttons manually */
-document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
-  btn.addEventListener('click', function() {{
-    document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(b) {{ b.classList.remove('active'); }});
-    btn.classList.add('active');
+
+/* ----------------------------------------------------------------
+   Run History per-page line charts.
+   _HIST_PAGES = [[run, run, ...], ...]  \u2014 page 0 is "Latest".
+   Charts are initialized lazily on first show because Chart.js renders
+   to 0x0 when the canvas is display:none. Page 0 is initialized on
+   DOMContentLoaded since it's the default-active panel.
+   ---------------------------------------------------------------- */
+var _histCharts = {{}};
+
+function _initHistChart(idx) {{
+  if (_histCharts[idx]) return;
+  var canvas = document.getElementById('trendChartHist' + idx);
+  if (!canvas || !window.Chart) return;
+  var page = (window._HIST_PAGES && _HIST_PAGES[idx]) || [];
+  if (page.length === 0) return;
+
+  var labels = page.map(function(r) {{
+    return r.session_num ? 'S' + r.session_num
+                         : (r.run_id || '').replace('run_','').replace(/_/g,' ');
   }});
+  var rates = page.map(function(r) {{
+    return r.summary ? (r.summary.pass_rate || 0) : 0;
+  }});
+  var pointColors = rates.map(function(v) {{
+    return v >= 90 ? '#52c41a' : (v >= 70 ? '#fa8c16' : '#ff4d4f');
+  }});
+
+  _histCharts[idx] = new Chart(canvas.getContext('2d'), {{
+    type: 'line',
+    data: {{
+      labels: labels,
+      datasets: [{{
+        label: 'Pass Rate %',
+        data: rates,
+        borderColor: '#1677ff',
+        backgroundColor: 'rgba(22,119,255,.10)',
+        pointBackgroundColor: pointColors,
+        pointBorderColor: pointColors,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        tension: 0.25,
+        fill: true,
+      }}]
+    }},
+    options: {{
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {{
+        y: {{ min: 0, max: 100, ticks: {{ callback: function(v) {{ return v + '%'; }} }} }},
+        x: {{ ticks: {{ font: {{ size: 10 }}, maxRotation: 0, autoSkipPadding: 12 }} }}
+      }},
+      plugins: {{
+        legend: {{ display: false }},
+        tooltip: {{ callbacks: {{
+          title: function(items) {{
+            var r = page[items[0].dataIndex];
+            var tests = (r.tests_executed || []).join(', ') || '(none)';
+            return (r.session_num ? 'Session ' + r.session_num : items[0].label) + ' \u2014 ' + tests;
+          }},
+          label: function(c) {{
+            var r     = page[c.dataIndex];
+            var s     = r.summary || {{}};
+            var tot   = s.total  || 0;
+            var p     = s.passed || 0;
+            var f     = s.failed || 0;
+            var prate = s.pass_rate != null ? s.pass_rate : 0;
+            var frate = tot ? Math.round((f / tot) * 1000) / 10 : 0;
+            return [
+              'Pass: ' + p + ' (' + prate + '%)',
+              'Fail: ' + f + ' (' + frate + '%)',
+              'Total cases: ' + tot,
+              'Patients tested: ' + (r.total_patients || 0)
+            ];
+          }}
+        }} }}
+      }}
+    }}
+  }});
+}}
+
+function showHistPage(idx) {{
+  document.querySelectorAll('.hist-tab').forEach(function(b) {{
+    b.classList.toggle('active', b.getAttribute('data-hp') === String(idx));
+  }});
+  document.querySelectorAll('.hist-page-panel').forEach(function(p) {{
+    p.classList.toggle('active', p.id === 'hist-page-' + idx);
+  }});
+  _initHistChart(idx);
+}}
+
+document.addEventListener('DOMContentLoaded', function() {{
+  // Page 0 (Latest) is the default-active panel \u2014 initialize its chart now.
+  _initHistChart(0);
 }});
 </script>
 </body>
@@ -732,11 +817,6 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
             )
         else:
             err_td = "<span style=\"color:#8c8c8c\">&mdash;</span>"
-        if r.screenshot_path:
-            rel  = Path(r.screenshot_path).as_posix()
-            shot = f'<a class="shot-link" href="../{rel}" target="_blank">View</a>'
-        else:
-            shot = "<span style=\"color:#8c8c8c\">&mdash;</span>"
         display_name = escape(patient_label(r.patient_id))
         pid_raw      = escape(str(r.patient_id))
         return (
@@ -746,8 +826,7 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
             f'<td class="pid-cell" data-pid="{pid_raw}" title="{pid_raw}">{display_name}</td>'
             f'<td>{badge}</td>'
             f'<td>{err_td}</td>'
-            f'<td>{shot}</td>'
-            f'<td class="dur-cell">{r.duration}s</td>'
+            f'<td class="dur-cell">{fmt_duration(r.duration)}</td>'
             f'</tr>'
         )
 
@@ -795,6 +874,66 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
   </div>
 </div>"""
 
+    def _render_hist_pages(self, pages: List[List[dict]], current_run_id: str) -> tuple:
+        """Build the per-page tab strip and corresponding panels.
+
+        Returns ``(tabs_html, panels_html)``. When there's only one page the
+        tab strip renders a single tab — kept for layout consistency, hidden
+        via CSS when degenerate (still renders the panel).
+
+        Each panel contains a chart-card (line chart, lazy-init) + the
+        existing per-page run-history table.
+        """
+        if not pages:
+            # No history yet — render a single empty panel with the
+            # existing 'no rows' table message; no tab strip.
+            empty_tbl = self._run_hist_table([], current_run_id)
+            panels = (
+                '<div id="hist-page-0" class="hist-page-panel active">'
+                f'<div class="tbl-wrap"><table>{_HIST_THEAD}<tbody>{empty_tbl}</tbody></table></div>'
+                '</div>'
+            )
+            return "", panels
+
+        tab_buttons: List[str] = []
+        panel_blocks: List[str] = []
+        for idx, page in enumerate(pages):
+            meta       = _page_meta(idx, page)
+            active_cls = "active" if idx == 0 else ""
+            tab_buttons.append(
+                f'<button class="hist-tab {active_cls}" data-hp="{idx}" '
+                f'onclick="showHistPage({idx})">'
+                f'{escape(meta["title"])}'
+                f'<span class="hist-tab-rng">({escape(meta["range"])})</span>'
+                f'</button>'
+            )
+            chart_title  = f'Pass Rate Trend &mdash; Sessions {escape(meta["range"])}'
+            tbl_rows     = self._run_hist_table(page, current_run_id)
+            panel_blocks.append(
+                f'<div id="hist-page-{idx}" class="hist-page-panel {active_cls}">'
+                  f'<div class="charts-row" style="grid-template-columns:1fr">'
+                    f'<div class="chart-card">'
+                      f'<div class="chart-title">{chart_title}</div>'
+                      f'<div class="chart-wrap" style="min-height:200px">'
+                        f'<canvas id="trendChartHist{idx}"></canvas>'
+                      f'</div>'
+                    f'</div>'
+                  f'</div>'
+                  f'<div class="hist-table-wrap">'
+                    f'<div class="tbl-wrap"><table>{_HIST_THEAD}'
+                    f'<tbody class="rhtbody-page" data-hp="{idx}">{tbl_rows}</tbody>'
+                    f'</table></div>'
+                  f'</div>'
+                f'</div>'
+            )
+
+        # Hide the tab strip when there's only one page — it's noise.
+        tabs_html = (
+            f'<div class="hist-tabs" role="tablist">{"".join(tab_buttons)}</div>'
+            if len(pages) > 1 else ""
+        )
+        return tabs_html, "".join(panel_blocks)
+
     def _run_hist_table(self, runs: List[dict], current_run_id: str) -> str:
         """Render run history table rows with expandable detail sub-rows."""
         if not runs:
@@ -830,7 +969,7 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
                 f'<td style="color:#389e0d;font-weight:600">{psd}</td>'
                 f'<td style="color:#cf1322;font-weight:600">{fld}</td>'
                 f'<td style="color:{rate_color};font-weight:700">{rate}%</td>'
-                f'<td>{dur}s</td>'
+                f'<td>{fmt_duration(dur)}</td>'
                 f'<td><button class="open-btn" onclick="toggleRun(this, {idx})">Open</button></td>'
                 f'</tr>'
                 f'{self._run_detail_sub_table(run, idx)}'
@@ -857,7 +996,7 @@ document.querySelectorAll('.hdr-nav .hnav-btn').forEach(function(btn) {{
                     f'<td>{escape(r.get("module", ""))}</td>'
                     f'<td title="{escape(pid)}">{disp}</td>'
                     f'<td>{badge}</td>'
-                    f'<td>{r.get("duration", 0)}s</td>'
+                    f'<td>{fmt_duration(r.get("duration", 0))}</td>'
                     f'</tr>'
                 )
             inner = f"""

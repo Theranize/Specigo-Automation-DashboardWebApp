@@ -13,3 +13,11 @@ reports/
 
 # Environment files
 .env
+
+# Local docs (not shared in git)
+docs/
+
+
+archive/
+
+

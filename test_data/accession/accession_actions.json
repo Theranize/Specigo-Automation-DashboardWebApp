@@ -198,7 +198,6 @@
     {
       "patient_id_ref": "P13",
       "scenario": "Reject Serum at accession; 2 re_accept cycles (Serum → 24h urine). Local date 17/04/2026.",
-      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
       "samples": [
         { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "accept" },
         {
@@ -214,13 +213,11 @@
       ],
       "re_accept": [
         {
-          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
           "samples": [
             { "sample": "Serum",        "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
           ]
         },
         {
-          "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
           "samples": [
             { "sample": "24-hour urine", "sub_department": "Clinical Chemistry", "action": "accept", "re_accept": "yes" }
           ]

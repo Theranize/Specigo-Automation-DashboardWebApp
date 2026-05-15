@@ -42,6 +42,60 @@ class BasePage:
         el.wait_for(state="visible", timeout=5000)
         el.click()
 
+    def safe_goto(self, url: str, retries: int = 2) -> None:
+        """Navigate to URL with retry on transient network errors.
+
+        The dev backend occasionally drops connections under heavy parallel
+        load (`net::ERR_CONNECTION_CLOSED`); retry once or twice before
+        propagating so transient blips don't fail an entire test.
+        """
+        last_err: Optional[Exception] = None
+        for attempt in range(retries + 1):
+            try:
+                self.page.goto(url)
+                return
+            except Exception as e:
+                last_err = e
+                time.sleep(2)
+                continue
+        if last_err is not None:
+            raise last_err
+
+    def click_first_visible_text(
+        self, text: str, exact: bool = True, timeout_ms: int = 30000
+    ) -> None:
+        """Click the first VISIBLE element matching the given text.
+
+        When the DOM has multiple matching elements (e.g. duplicated sidebar
+        nav items where one is rendered hidden behind a CSS pseudo-state),
+        plain `.first.click()` can pick the hidden duplicate and time out.
+        This iterates the matches and clicks the first that reports visible.
+        """
+        deadline = time.monotonic() + (timeout_ms / 1000.0)
+        last_err: Optional[Exception] = None
+        while time.monotonic() < deadline:
+            candidates = self.page.get_by_text(text, exact=exact)
+            try:
+                count = candidates.count()
+            except Exception as e:
+                last_err = e
+                time.sleep(0.2)
+                continue
+            for i in range(count):
+                cand = candidates.nth(i)
+                try:
+                    if cand.is_visible():
+                        cand.click()
+                        return
+                except Exception as e:
+                    last_err = e
+                    continue
+            time.sleep(0.2)
+        raise TimeoutError(
+            f"click_first_visible_text({text!r}): no visible match within "
+            f"{timeout_ms}ms (last error: {last_err})"
+        )
+
     def fill_textbox(self, name: str, value: str) -> None:
         """Fill a textbox identified by its accessible name."""
         self.page.get_by_role("textbox", name=name).fill(value)

@@ -1,6 +1,7 @@
 """Phlebotomist Sample Toggle flow orchestrator."""
 
 from typing import Any, Dict, List, Optional
+from flows._guard import check_ui_error
 from pages.phlebotomist.phlebotomist_page import PhlebotomistPage
 from state import runtime_state
 from utils.date_utils import resolve_filters
@@ -28,6 +29,9 @@ def execute_phlebotomist_flow(
 
     pp.navigate_to_sample_tracker()
 
+    if check_ui_error(page, result, "post-navigate"):
+        return result
+
     if not pp.verify_page_header():
         result["error_found"] = True
         result["error_message"] = "Page header verification failed"
@@ -52,6 +56,9 @@ def execute_phlebotomist_flow(
         pp.fill_search_id(sample_id)
         pp.click_search()
 
+        if check_ui_error(page, result, "post-search"):
+            return result
+
         block = pp.find_sample_block(rule["sample"], sample_id)
         if not block:
             result["error_found"] = True
@@ -69,6 +76,9 @@ def execute_phlebotomist_flow(
             "action": rule["action"],
             "result": toggle_result,
         })
+
+    if check_ui_error(page, result, "end-of-flow"):
+        return result
 
     result["completed"] = True
     return result

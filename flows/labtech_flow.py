@@ -1,6 +1,7 @@
 """Lab Technician Report Entry flow orchestrator."""
 
 from typing import Any, Dict, List, Optional
+from flows._guard import check_ui_error
 from pages.lab_technician.labtech_page import LabTechPage
 from state import runtime_state
 from utils.date_utils import resolve_filters
@@ -34,6 +35,10 @@ def execute_labtech_search(
         return result
 
     lp.click_report_entry_menu()
+
+    if check_ui_error(page, result, "post-menu"):
+        return result
+
     lp.apply_date_filters(filters["from_date"], filters["to_date"])
 
     if department:
@@ -44,6 +49,9 @@ def execute_labtech_search(
     lp.fill_search_name(patient_name)
     lp.fill_search_mobile(patient_mobile)
     lp.click_apply_filter()
+
+    if check_ui_error(page, result, "post-search"):
+        return result
 
     if not lp.wait_for_patient_rows():
         result["error_found"] = True
@@ -66,6 +74,9 @@ def execute_labtech_search(
     if not lp.open_report_entry(sample_id=anchor_id):
         result["error_found"] = True
         result["error_message"] = "Report Entry icon not found after 10 scroll attempts"
+        return result
+
+    if check_ui_error(page, result, "end-of-flow"):
         return result
 
     result["completed"] = True
@@ -95,6 +106,9 @@ def execute_labtech_tests(
             result["error_found"] = True
             result["error_message"] = test_result["error"]
             return result
+
+    if check_ui_error(page, result, "end-of-flow"):
+        return result
 
     result["completed"] = True
     return result
@@ -234,8 +248,10 @@ def _handle_save(
     for param_name, value in parameters.items():
         filled = lp.fill_parameter(row, param_name, value)
         if not filled:
+            diag = getattr(lp, "last_param_fill_diag", None)
+            detail = f" [{diag}]" if diag else ""
             entry["error"] = (
-                f"Parameter fill failed: {test_name} → {param_name}"
+                f"Parameter fill failed: {test_name} → {param_name}{detail}"
             )
             return entry
 

@@ -113,7 +113,6 @@
     {
       "patient_id_ref": "P13",
       "scenario": "Existing user (local date 17/04/2026) — all 4 samples ON; rejections at accession + LT",
-      "filters": { "from_date": "17/04/2026", "to_date": "17/04/2026" },
       "sample_rules": [
         { "sample": "Whole Blood/Plasma", "sub_department": "Hematology",        "action": "toggle_on" },
         { "sample": "Serum",              "sub_department": "Clinical Chemistry", "action": "toggle_on" },

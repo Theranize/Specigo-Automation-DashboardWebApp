@@ -124,6 +124,17 @@ class ReportRegistry:
         """Return a copy of all collected results."""
         return list(self._results)
 
+    def extend_from_dicts(self, payload: list) -> None:
+        """Append TestResults reconstructed from dicts (xdist worker partials).
+
+        Unknown keys are dropped so future TestResult field additions don't
+        crash on stale partials.
+        """
+        allowed = set(TestResult.__dataclass_fields__.keys())
+        for d in payload or []:
+            if isinstance(d, dict):
+                self._results.append(TestResult(**{k: v for k, v in d.items() if k in allowed}))
+
     def summary(self) -> dict:
         """Return an aggregated summary dict for the current session."""
         total    = len(self._results)

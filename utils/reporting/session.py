@@ -77,7 +77,7 @@ def _load_run_history() -> List[dict]:
     if not RUNS_DIR.exists():
         return []
     runs: List[dict] = []
-    for f in sorted(RUNS_DIR.glob("run_*.json")):
+    for f in sorted(RUNS_DIR.glob("*.json")):
         try:
             runs.append(json.loads(f.read_text(encoding="utf-8")))
         except Exception as exc:

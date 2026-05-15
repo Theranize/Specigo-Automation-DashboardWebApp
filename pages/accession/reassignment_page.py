@@ -23,16 +23,26 @@ class ReassignmentPage(BasePage):
     """Page object for the Re-Assignment Log workflow."""
 
     def navigate_to_reassignment_log(self) -> None:
-        """Click Accession sidebar → Re-Assignment Log."""
-        accession = self.page.get_by_text(SIDEBAR_ACCESSION_TEXT, exact=True)
-        accession.wait_for(state="visible", timeout=5000)
-        accession.click()
-        accession.hover()
-        self.wait_for_idle(0.6)
-        accession.click()
-        self.page.get_by_text(
-            SIDEBAR_REASSIGNMENT_LOG_TEXT, exact=True
-        ).click()
+        """Navigate to Re-Assignment Log (URL: /reassignmentlog).
+
+        Bypasses the sidebar nav menu — duplicate hidden DOM links break
+        strict-mode `.click()` under parallel load. Direct goto is
+        deterministic. Wait for the search input to render so subsequent
+        `fill_search_filters` doesn't time out on a half-rendered page.
+        """
+        base = getattr(self.page.context, "base_url", "") or ""
+        if "reassignmentlog" not in (self.page.url or ""):
+            self.safe_goto(base + "reassignmentlog")
+        try:
+            self.page.wait_for_load_state("networkidle", timeout=10000)
+        except Exception:
+            pass
+        try:
+            self.page.get_by_placeholder(SEARCH_PLACEHOLDER).first.wait_for(
+                state="visible", timeout=20000
+            )
+        except Exception:
+            pass
         self.wait_for_idle(2)
 
     def fill_search_filters(self, name: str, mobile: str) -> None:

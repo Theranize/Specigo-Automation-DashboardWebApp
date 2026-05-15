@@ -161,7 +161,13 @@ class LabTechPage(BasePage):
 
             for sub_idx in range(sub_rows.count()):
                 sub_row = sub_rows.nth(sub_idx)
-                text = sub_row.inner_text()
+                try:
+                    # Short timeout: under heavy load the table can re-render
+                    # between count() and nth(); skip stale sub-rows instead
+                    # of letting a 30 s default-timeout fail the whole step.
+                    text = sub_row.inner_text(timeout=5000)
+                except Exception:
+                    continue
 
                 if sample_name in text and sample_id in text:
                     return sub_row
@@ -254,7 +260,14 @@ class LabTechPage(BasePage):
                 r = rows.nth(i)
                 sub_rows = r.locator(SAMPLE_SUB_ROW_SELECTOR)
                 for j in range(sub_rows.count()):
-                    if sample_id in sub_rows.nth(j).inner_text():
+                    try:
+                        # Short timeout: under heavy load the table can
+                        # re-render between count() and nth(); skip stale
+                        # sub-rows instead of timing out the whole step.
+                        text = sub_rows.nth(j).inner_text(timeout=5000)
+                    except Exception:
+                        continue
+                    if sample_id in text:
                         target_row = r
                         found = True
                         break
@@ -344,27 +357,52 @@ class LabTechPage(BasePage):
     def fill_parameter(self, row: Locator, param_name: str, value: str) -> bool:
         """Fill a single parameter input; returns False if label or input not found.
 
-        Retries once after a 2s wait to handle temporarily-disabled inputs
-        that occur during page re-renders after save cycles.
+        Retries up to 3 times to handle DOM re-renders after save cycles —
+        the second LFT save cycle was historically flaky here (P2 Bilirubin -
+        Total). Stores diagnostic context on `self.last_param_fill_diag` so
+        the flow can surface it in the failure message.
         """
+        self.last_param_fill_diag: Optional[str] = None
         for attempt in range(3):
+            try:
+                row.scroll_into_view_if_needed()
+            except Exception:
+                pass
+            self.wait_for_idle(0.5)
+
             label = row.get_by_text(param_name, exact=True)
             if label.count() == 0:
                 label = row.get_by_text(param_name, exact=False)
             if label.count() == 0:
+                self.last_param_fill_diag = f"label not found (attempt {attempt + 1}/3)"
                 if attempt < 2:
                     self.wait_for_idle(2)
                     continue
                 return False
 
             label_el = label.first
-            label_el.scroll_into_view_if_needed()
+            try:
+                label_el.scroll_into_view_if_needed()
+            except Exception:
+                pass
             self.wait_for_idle(0.2)
 
             container = label_el.locator(PARAM_CONTAINER_XPATH)
             textbox = container.locator(PARAM_INPUT_SELECTOR)
 
-            if textbox.count() == 0 or textbox.first.is_disabled():
+            if textbox.count() == 0:
+                self.last_param_fill_diag = (
+                    f"input not in container (attempt {attempt + 1}/3)"
+                )
+                if attempt < 2:
+                    self.wait_for_idle(2)
+                    continue
+                return False
+
+            if not self._wait_until_enabled(textbox.first, timeout=5.0):
+                self.last_param_fill_diag = (
+                    f"input still disabled after 5s (attempt {attempt + 1}/3)"
+                )
                 if attempt < 2:
                     self.wait_for_idle(2)
                     continue

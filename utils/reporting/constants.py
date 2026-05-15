@@ -53,16 +53,91 @@ JSON_REPORT_PATH = SUMMARY_JSON
 # FLOW REGISTRY  –  single source of truth for all E2E flows
 # =============================================================================
 #: Adding a new test:  append one dict here; no other file needs editing.
-FLOW_REGISTRY: Dict[str, Dict] = {
-    "test_e2e_acceptance": {
-        "label":       "E2E Acceptance Flow",
-        "short":       "e2eacceptance",
-        "phase_order": [
-            "Front Desk", "Phlebotomist", "Accession",
-            "Lab Technician", "Doctor", "Published Reports",
-        ],
-    },
+# Standard 5-phase pipeline — used by full-acceptance-style tests.
+_STD_ACCEPTANCE: List[str] = [
+    "Front Desk", "Phlebotomist", "Accession",
+    "Lab Technician", "Doctor",
+]
+
+# Standard 3-cycle rejection pipeline — Acc reject -> recollect -> re-accept,
+# LT reject -> recollect -> re-accept, then Doctor resample -> re-cycle ->
+# final approval. Concrete sample names (Serum / Urine / 24h / WB / etc.) are
+# captured per-test below; the structural shape is constant.
+_REJECTION_3CYCLE_TEMPLATE: List[str] = [
+    "Front Desk", "Phlebotomist",
+    "Accession (Reject {a})", "Phlebotomist (Recollect {a})", "Accession (Re-accept {a})",
+    "Lab Technician (Reject {b})",
+    "Accession (Reassign {b})", "Phlebotomist (Recollect {b})", "Accession (Re-accept {b})",
+    "Lab Technician (Save All)",
+    "Doctor (Resample {c})",
+    "Accession (Reassign {d})", "Phlebotomist (Recollect {d})", "Accession (Re-accept {d})",
+    "Lab Technician (Save {c})",
+    "Doctor ({final} {c})",
+]
+
+
+def _rejection_3cycle(a: str, b: str, c: str, d: str, final: str) -> List[str]:
+    """Materialise the 3-cycle rejection phase-order template with concrete sample names."""
+    return [p.format(a=a, b=b, c=c, d=d, final=final) for p in _REJECTION_3CYCLE_TEMPLATE]
+
+
+# Canonical phase order per patient — single source of truth for the phase
+# report's "expected phases" view. The same list is materialised under TWO
+# FLOW_REGISTRY keys per patient:
+#   `test_e2e_p<N>`        — used by the parametrized acceptance/rejection runners
+#   `test_super_user_p<N>` — used by the admin/manager super-user runner
+# Both runners walk the SAME PhaseStep manifest from tests/e2e/_manifest.py,
+# so their phase labels stay in sync with the entries below by construction.
+_PATIENT_PHASE_ORDERS: Dict[str, List[str]] = {
+    "P1":  _STD_ACCEPTANCE,
+    "P2":  _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Partial Approve"),
+    "P3":  _STD_ACCEPTANCE,
+    "P4":  [
+        "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
+        "Doctor (Approve)", "Doctor (Rectify)",
+    ],
+    "P5":  _STD_ACCEPTANCE,
+    "P6":  _rejection_3cycle("Urine", "Serum", "CBC", "WB", "Approve"),
+    "P7":  ["Front Desk"],
+    "P8":  _STD_ACCEPTANCE,
+    "P9":  _rejection_3cycle("Serum", "24h", "LFT", "Serum 2", "Approve"),
+    "P10": [
+        "Front Desk", "Phlebotomist",
+        "Accession (Reject 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
+        "Lab Technician",
+        "Doctor (Approve)", "Doctor (Rectify LFT)",
+    ],
+    "P11": ["Front Desk"],
+    "P12": _STD_ACCEPTANCE,
+    "P13": [
+        "Front Desk", "Phlebotomist",
+        "Accession (Reject Serum)", "Phlebotomist (Recollect Serum)", "Accession (Re-accept Serum)",
+        "Lab Technician (Reject 24h)",
+        "Accession (Reassign 24h)", "Phlebotomist (Recollect 24h)", "Accession (Re-accept 24h)",
+        "Lab Technician (Save All)",
+        "Doctor (Approve All)",
+    ],
+    "P14": [
+        "Front Desk", "Phlebotomist", "Accession", "Lab Technician",
+        "Doctor (Partial Approve)",
+    ],
 }
+
+
+FLOW_REGISTRY: Dict[str, Dict] = {}
+
+for _pid, _order in _PATIENT_PHASE_ORDERS.items():
+    _suffix = _pid.lower()
+    FLOW_REGISTRY[f"test_e2e_{_suffix}"] = {
+        "label":       f"{_pid} E2E",
+        "short":       f"e2e{_suffix}",
+        "phase_order": list(_order),
+    }
+    FLOW_REGISTRY[f"test_super_user_{_suffix}"] = {
+        "label":       f"{_pid} Super-User",
+        "short":       f"superuser{_suffix}",
+        "phase_order": list(_order),
+    }
 
 
 def flow_label(test_name: str) -> str:

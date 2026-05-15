@@ -73,6 +73,7 @@ NOT_EXECUTED = "NOT EXECUTED"
 #: _FLOW_SHORT is derived from FLOW_REGISTRY (single source of truth).
 #: Kept as a module-level dict for fast lookup; populated on first import.
 from utils.reporting.constants import FLOW_REGISTRY as _FLOW_REGISTRY
+from utils.failure_artifact import write_highlight_sidecar
 _FLOW_SHORT: Dict[str, str] = {k: v["short"] for k, v in _FLOW_REGISTRY.items()}
 
 #: Maps lowercase phase-name keywords to descriptive issue-type suffixes.
@@ -252,6 +253,25 @@ class PhaseTracker:
         """True if at least one phase has been tracked."""
         return bool(self._data)
 
+    def merge_serialised(self, payload: Dict[str, Dict[str, List[dict]]]) -> None:
+        """Merge a serialised phase_data dict (from another worker) into this tracker.
+
+        Payload shape: {test_name: {patient_id: [PhaseEntry-as-dict, ...]}}.
+        Each parallel xdist invocation routes any given test to a single
+        worker, so test_names from different workers are disjoint. Within a
+        merged test_name, patient_ids are also disjoint. Phase order is
+        rebuilt from the entries themselves.
+        """
+        allowed = set(PhaseEntry.__dataclass_fields__.keys())
+        for test_name, patient_map in (payload or {}).items():
+            for pid, entries in (patient_map or {}).items():
+                for d in entries or []:
+                    if not isinstance(d, dict):
+                        continue
+                    entry = PhaseEntry(**{k: v for k, v in d.items() if k in allowed})
+                    self._register(test_name, pid, entry.phase_name)
+                    self._record(test_name, pid, entry)
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -317,6 +337,7 @@ class PhaseTracker:
             dest.mkdir(parents=True, exist_ok=True)
             path    = dest / fname
             page.screenshot(path=str(path), full_page=True)
+            write_highlight_sidecar(page, str(path))
             return str(path)
         except Exception:
             return ""

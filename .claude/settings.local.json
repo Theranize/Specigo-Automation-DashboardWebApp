@@ -87,7 +87,30 @@
       "Bash(rm -f reports/patient_phase_report*.html reports/patient_phase_report*.json)",
       "Bash(cmd:*)",
       "Bash(powershell.exe:*)",
-      "Bash(.\\\\Test\\\\Scripts\\\\python.exe *)"
+      "Bash(.\\\\Test\\\\Scripts\\\\python.exe *)",
+      "Bash(Test\\\\\\\\Scripts\\\\\\\\pip list *)",
+      "Bash(where pandoc *)",
+      "Bash(where wkhtmltopdf *)",
+      "Bash(where chrome *)",
+      "Bash(./Test/Scripts/pip.exe list *)",
+      "Bash(D:/specigo-automation/Specigo-Automation-DashboardWebApp/Test/Scripts/python.exe -c \"import PIL; print\\(PIL.__version__\\)\")",
+      "Bash(git check-ignore *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\specigo-automation\\\\Specigo-Automation-DashboardWebApp\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)",
+      "Bash(git *)",
+      "Bash(xargs cat)",
+      "Bash(.\\\\run.bat e2e *)",
+      "PowerShell(cmd /c \"run.bat e2e dev 5 > .last_run_output.log 2>&1\")",
+      "PowerShell($pwd.Path; \\(Test-Path '.\\\\run.bat'\\); \\(Test-Path '.\\\\Test\\\\Scripts\\\\pytest.exe'\\))",
+      "PowerShell(cmd /c \".\\\\run.bat e2e dev 5 > .last_run_output.log 2>&1\")",
+      "PowerShell(\\(Get-Item .\\\\.last_run_output.log\\).Length; \\(Get-Content .\\\\.last_run_output.log -TotalCount 50\\))",
+      "PowerShell($bytes = [System.IO.File]::ReadAllBytes\\('.\\\\run.bat'\\); \"First 8 bytes: $\\($bytes[0..7] -join ','\\)\"; \"Has CR \\(0x0D\\): $\\(\\(\\($bytes -contains 13\\)\\)\\)\"; \"Has LF \\(0x0A\\): $\\(\\(\\($bytes -contains 10\\)\\)\\)\"; \"Total bytes: $\\($bytes.Length\\)\")",
+      "PowerShell($content = [System.IO.File]::ReadAllText\\('.\\\\run.bat'\\); $crlf = $content -replace \"\\(?<!\\\\r\\)\\\\n\", \"`r`n\"; [System.IO.File]::WriteAllText\\('.\\\\run.bat', $crlf, \\(New-Object System.Text.UTF8Encoding $false\\)\\); $b = [System.IO.File]::ReadAllBytes\\('.\\\\run.bat'\\); \"Has CR now: $\\($b -contains 13\\)\"; \"Bytes: $\\($b.Length\\)\")",
+      "PowerShell(\\(Get-Item .\\\\.last_run_output.log\\).Length; \"---\"; Get-Content .\\\\.last_run_output.log -Tail 30)",
+      "PowerShell(Get-ChildItem .\\\\reports\\\\ -Recurse -File | Where-Object { $_.LastWriteTime -gt \\(Get-Date\\).AddHours\\(-1\\) } | Sort-Object LastWriteTime -Descending | Select-Object FullName, @{N='Mod';E={$_.LastWriteTime.ToString\\('HH:mm:ss'\\)}} | Format-Table -AutoSize | Out-String)",
+      "PowerShell(.\\\\Test\\\\Scripts\\\\python.exe -c \"from flows._guard import _SUCCESS_TEXT_RE; cases=['Patient Registered successfully','Patient Registered successfully.','Sample Rejected','Test rectification successfully completed','Mobile number is required','Please select relation','Patient record\\(s\\) found with the given mobile number','Maximum 10 patients can be added','Registered successfully']; [print\\(repr\\(c\\), '->', bool\\(_SUCCESS_TEXT_RE.search\\(c\\)\\)\\) for c in cases]\")",
+      "Bash(dir *)"
     ]
   }
 }
